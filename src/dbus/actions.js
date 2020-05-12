@@ -1,48 +1,38 @@
+
 const DBUS_SIGNAL_RECEIVED = 'DBUS_SIGNAL_RECEIVED';
 const DBUS_RESPONSE_RECEIVED = 'DBUS_RESPONSE_RECEIVED';
 const DBUS_ERROR_RECEIVED = 'DBUS_ERROR_RECEIVED';
 const DBUS_SEND_MESSAGE = 'DBUS_SEND_MESSAGE';
-const DBUS_DATA_RECEIVED = 'DBUS_DATA_RECEIVED';
+const DBUS_MESSAGE_COMPLETED = 'DBUS_MESSAGE_COMPLETED';
+
+const sendMessage = () => {
+  let id = 0;
+  return (service, path, iface, method, ...args) => ({
+    type: DBUS_SEND_MESSAGE,
+    payload: {
+      id: ++id,
+      destination: service,
+      interface: iface,
+      path,
+      method,
+      args,
+    },
+  });
+};
 
 export const messageTypes = {
-    SIGNAL: 'signal',
-    RESPONSE: 'response',
-    ERROR: 'error',
-};
-
-const messageReceived = payload => {
-    if (payload.type === messageTypes.SIGNAL) {
-        return { type: SOCKET_SIGNAL_RECEIVED };
-    }
-
-    if (payload.type === messageTypes.RESPONSE) {
-        return { type: SOCKET_RESPONSE_RECEIVED };
-    }
-
-    return { type: SOCKET_ERROR_RECEIVED };
-};
-
-const sendMessage = (service, path, iface, method, ...args) => {
-    return {
-        type: DBUS_SEND_MESSAGE,
-        payload: {
-            destination: service,
-            interface: iface,
-            path,
-            method,
-            args,
-        }
-    };
+  SIGNAL: 'signal',
+  RESPONSE: 'response',
+  ERROR: 'error',
 };
 
 const actions = {
-    DBUS_SIGNAL_RECEIVED,
-    DBUS_RESPONSE_RECEIVED,
-    DBUS_ERROR_RECEIVED,
-    DBUS_SEND_MESSAGE,
-    DBUS_DATA_RECEIVED,
-    messageReceived,
-    sendMessage,
+  DBUS_SIGNAL_RECEIVED,
+  DBUS_RESPONSE_RECEIVED,
+  DBUS_ERROR_RECEIVED,
+  DBUS_SEND_MESSAGE,
+  DBUS_MESSAGE_COMPLETED,
+  sendMessage: sendMessage(),
 };
 
 export default actions;

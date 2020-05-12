@@ -1,4 +1,9 @@
+import dbusActions from '../../actions';
+import { XENMGR_UI_INITIALIZED } from './actions';
+
 const initialState = {
+  properties: {
+    // properties
     show_msg_on_vm_start: false,
     show_msg_on_vm_start_tools_warning: false,
     show_msg_on_no_disk: false,
@@ -20,10 +25,49 @@ const initialState = {
     language: '',
     supported_languages: [],
     drm_graphics: false,
-}
+  },
+
+  // metadata
+  meta: {
+    initialized: false,
+  },
+};
 
 const xenmgrUiReducer = (state = initialState, action = {}) => {
-    return state;
-}
+  const { type, payload } = action;
+  switch (type) {
+    case XENMGR_UI_INITIALIZED: {
+      return {
+        ...state,
+        meta: {
+          initialized: true,
+        },
+      };
+    }
+    case dbusActions.DBUS_MESSAGE_COMPLETED: {
+      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
+        switch (payload.interface) {
+          case 'org.freedesktop.DBus.Properties': {
+            if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.config.ui') {
+              if (payload.method === 'GetAll') {
+                const received = payload.received[0];
+                const properties = {};
+                Object.keys(received).forEach((key) => {
+                  properties[key.replace(/-/g, '_')] = received[key];
+                });
+
+                return {
+                  ...state,
+                  properties,
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return state;
+};
 
 export default xenmgrUiReducer;

@@ -3,8 +3,8 @@ import dbusReducer from './dbus/reducers';
 import websocketReducer from './websocket/reducer';
 
 const rootReducer = combineReducers({
-    dbus: dbusReducer,
-    websocket: websocketReducer,
+  dbus: dbusReducer,
+  websocket: websocketReducer,
 });
 
 export default rootReducer;

@@ -5,9 +5,9 @@ import Root from './components/Root';
 
 const store = configureStore();
 export const App = () => {
-    return (
-        <Provider store={store}>
-            <Root />
-        </Provider>
-    );
+  return (
+    <Provider store={store}>
+      <Root />
+    </Provider>
+  );
 };

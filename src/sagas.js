@@ -3,8 +3,8 @@ import { websocketSaga } from './websocket/sagas';
 import { dbusSaga } from './dbus/sagas';
 
 export const rootSaga = function* () {
-    yield all([
-        websocketSaga(),
-        dbusSaga(),
-    ]);
+  yield all([
+    websocketSaga(),
+    dbusSaga(),
+  ]);
 };

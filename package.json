@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npx webpack --mode production",
     "start": "npx webpack-dev-server --mode development --devtool inline-source-map --host 0.0.0.0 --open --hot",
-    "deploy": "npm i && npm run build && rsync -r ./dist/ root@${DEST}:/usr/lib/xui/"
+    "deploy": "npm i && npm run build && rsync -r ./dist/ root@${DEST}:/usr/lib/xui/",
+    "lint": "npx eslint src --ext .js --fix"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
@@ -16,10 +17,9 @@
     "babel-loader": "^8.1.0",
     "babel-polyfill": "^6.26.0",
     "css-loader": "^3.5.3",
+    "eslint": "^7.0.0",
+    "eslint-plugin-react": "^7.19.0",
     "html-webpack-plugin": "^4.3.0",
-    "react-redux": "^7.2.0",
-    "redux": "^4.0.5",
-    "redux-saga": "^1.1.3",
     "source-map-loader": "^0.2.4",
     "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
@@ -29,6 +29,9 @@
   "dependencies": {
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-router-dom": "^5.1.2"
+    "react-router-dom": "^5.1.2",
+    "react-redux": "^7.2.0",
+    "redux": "^4.0.5",
+    "redux-saga": "^1.1.3"
   }
 }

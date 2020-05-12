@@ -5,16 +5,16 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: './src/index.js',
   resolve: {
-    extensions: ['.js']
+    extensions: ['.js', '.jsx'],
   },
   output: {
     path: path.join(__dirname, '/dist'),
-    filename: 'bundle.min.js'
+    filename: 'bundle.min.js',
   },
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.jsx?$/,
         use: {
           loader: 'babel-loader',
         },
@@ -24,15 +24,15 @@ module.exports = {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader'],
       },
-    ]
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html'
+      template: './src/index.html',
     }),
     new webpack.EnvironmentPlugin({
       REMOTE_HOST: '',
       REMOTE_PORT: '',
     }),
-  ]
-}
+  ],
+};

@@ -1,4 +1,7 @@
 import dbusActions from '../../actions';
+import { methods } from './constants';
+
+export const XENMGR_VM_INITIALIZED = 'XENMGR_VM_INITIALIZED';
 
 const service = 'com.citrix.xenclient.xenmgr';
 const iface = `${service}.vm`;
@@ -8,64 +11,66 @@ const productIface = `${iface}.product`;
 const unrestrictedIface = `${iface}.unrestricted`;
 const freedesktopIface = 'org.freedesktop.DBus.Properties';
 
-const actions = vmPath => ({
-    getProperty: (name) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Get', iface, name),
-    getAllProperties: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'GetAll', iface),
-    setProperty: (name, value) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Set', iface, name, value),
-    addArgoFirewallRule: (rule) => dbusActions.sendMessage(service, vmPath, iface, 'add_argo_firewall_rule', rule),
-    addDisk: (diskPath) => dbusActions.sendMessage(service, vmPath, iface, 'add_disk', diskPath),
-    addNetFirewallRule: (id, direction, remoteIp, extra) => dbusActions.sendMessage(service, vmPath, iface, 'add_net_firewall_rule', id, direction, remoteIp, extra),
-    addNic: (nicPath) => dbusActions.sendMessage(service, vmPath, iface, 'add_nic', nicPath),
-    createChildServiceVm: (template) => dbusActions.sendMessage(service, vmPath, iface, 'create_child_service_vm', template),
-    delete: () => dbusActions.sendMessage(service, vmPath, iface, 'delete'),
-    deleteArgoFirewallRule: (rule) => dbusActions.sendMessage(service, vmPath, iface, 'delete_argo_firewall_rule', rule),
-    deleteNetFirewallRule: (id) => dbusActions.sendMessage(service, vmPath, iface, 'delete_net_firewall_rule', id),
-    destroy: () => dbusActions.sendMessage(service, vmPath, iface, 'destroy'),
-    getDbKey: (key) => dbusActions.sendMessage(service, vmPath, iface, 'get_db_key', key),
-    getDomstoreKey: (key) => dbusActions.sendMessage(service, vmPath, iface, 'get_domstore_key', key),
-    hibernate: () => dbusActions.sendMessage(service, vmPath, iface, 'hibernate'),
-    listArgoFirewallRules: () => dbusActions.sendMessage(service, vmPath, iface, 'list_argo_firewall_rules'),
-    listDisks: () => dbusActions.sendMessage(service, vmPath, iface, 'list_disks'),
-    listNetFirewallRules: () => dbusActions.sendMessage(service, vmPath, iface, 'list_net_firewall_rules'),
-    listNics: () => dbusActions.sendMessage(service, vmPath, iface, 'list_nics'),
-    pause: () => dbusActions.sendMessage(service, vmPath, iface, 'pause'),
-    readIcon: () => dbusActions.sendMessage(service, vmPath, iface, 'read_icon'),
-    reboot: () => dbusActions.sendMessage(service, vmPath, iface, 'reboot'),
-    resume: () => dbusActions.sendMessage(service, vmPath, iface, 'resume'),
-    resumeFromFile: (file) => dbusActions.sendMessage(service, vmPath, iface, 'resume_from_file', file),
-    setDbKey: (key, value) => dbusActions.sendMessage(service, vmPath, iface, 'set_db_key', key, value),
-    setDomstoreKey: (key, value) => dbusActions.sendMessage(service, vmPath, iface, 'set_domstore_key', key, value),
-    shutdown: () => dbusActions.sendMessage(service, vmPath, iface, 'shutdown'),
-    sleep: () => dbusActions.sendMessage(service, vmPath, iface, 'sleep'),
-    start: () => dbusActions.sendMessage(service, vmPath, iface, 'start'),
-    startInternal: () => dbusActions.sendMessage(service, vmPath, iface, 'start_internal'),
-    suspendToFile: (file) => dbusActions.sendMessage(service, vmPath, iface, 'suspend_to_file', file),
-    switch: () => dbusActions.sendMessage(service, vmPath, iface, 'switch'),
-    unpause: () => dbusActions.sendMessage(service, vmPath, iface, 'unpause'),
+const actions = (vmPath) => ({
+  // properties
+  getProperty: (name) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Get', iface, name),
+  getAllProperties: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'GetAll', iface),
+  setProperty: (name, value) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Set', iface, name, value),
 
-    //auth
-    auth: () => dbusActions.sendMessage(service, vmPath, authIface, 'auth'),
-    authRequired: () => dbusActions.sendMessage(service, vmPath, authIface, 'auth_required'),
-    
-    // pci
-    addPtRule: (pciClass, vendorId, deviceId) => dbusActions.sendMessage(service, vmPath, pciIface, 'add_pt_rule', pciClass, vendorId, deviceId),
-    addPtRuleBdf: (bdf) => dbusActions.sendMessage(service, vmPath, pciIface, 'add_pt_rule_bdf', bdf),
-    deletePtRule: (pciClass, vnedorId, deviceId) => dbusActions.sendMessage(service, vmPath, pciIface, 'delete_pt_rule', pciClass, vnedorId, deviceId),
-    deletePtRuleBdf: (bdf) => dbusActions.sendMessage(service, vmPath, pciIface, 'delete_pt_rule_bdf', bdf),
-    listPtPciDevices: () => dbusActions.sendMessage(service, vmPath, pciIface, 'list_pt_pci_devices'),
-    listPtRules: () => dbusActions.sendMessage(service, vmPath, pciIface, 'list_pt_rules'),
-    
-    // product
-    getOvfEnvXml: () => dbusActions.sendMessage(service, vmPath, productIface, 'get_ovf_env_xml'),
-    getProductProperty: () => dbusActions.sendMessage(service, vmPath, productIface, 'get_product_property'),
-    listProductProperties: () => dbusActions.sendMessage(service, vmPath, productIface, 'list_product_properties'),
-    setProductProperty: (propertyId, value) => dbusActions.sendMessage(service, vmPath, productIface, 'set_product_property', propertyId, value),
+  // vm
+  addArgoFirewallRule: (rule) => dbusActions.sendMessage(service, vmPath, iface, methods.ADD_ARGO_FIREWALL_RULE, rule),
+  addDisk: (diskPath) => dbusActions.sendMessage(service, vmPath, iface, methods.ADD_DISK, diskPath),
+  addNetFirewallRule: (id, direction, remoteIp, extra) => dbusActions.sendMessage(service, vmPath, iface, methods.ADD_NET_FIREWALL_RULE, id, direction, remoteIp, extra),
+  addNic: (nicPath) => dbusActions.sendMessage(service, vmPath, iface, methods.ADD_NIC, nicPath),
+  createChildServiceVm: (template) => dbusActions.sendMessage(service, vmPath, iface, methods.CREATE_CHILD_SERVICE_VM, template),
+  delete: () => dbusActions.sendMessage(service, vmPath, iface, methods.DELETE),
+  deleteArgoFirewallRule: (rule) => dbusActions.sendMessage(service, vmPath, iface, methods.DELETE_ARGO_FIREWALL_RULE, rule),
+  deleteNetFirewallRule: (id) => dbusActions.sendMessage(service, vmPath, iface, methods.DELETE_NET_FIREWALL_RULE, id),
+  destroy: () => dbusActions.sendMessage(service, vmPath, iface, methods.DESTROY),
+  getDbKey: (key) => dbusActions.sendMessage(service, vmPath, iface, methods.GET_DB_KEY, key),
+  getDomstoreKey: (key) => dbusActions.sendMessage(service, vmPath, iface, methods.GET_DOMSTORE_KEY, key),
+  hibernate: () => dbusActions.sendMessage(service, vmPath, iface, methods.HIBERNATE),
+  listArgoFirewallRules: () => dbusActions.sendMessage(service, vmPath, iface, methods.LIST_ARGO_FIREWALL_RULES),
+  listDisks: () => dbusActions.sendMessage(service, vmPath, iface, methods.LIST_DISKS),
+  listNetFirewallRules: () => dbusActions.sendMessage(service, vmPath, iface, methods.LIST_NET_FIREWALL_RULES),
+  listNics: () => dbusActions.sendMessage(service, vmPath, iface, methods.LIST_NICS),
+  pause: () => dbusActions.sendMessage(service, vmPath, iface, methods.PAUSE),
+  readIcon: () => dbusActions.sendMessage(service, vmPath, iface, methods.READ_ICON),
+  reboot: () => dbusActions.sendMessage(service, vmPath, iface, methods.REBOOT),
+  resume: () => dbusActions.sendMessage(service, vmPath, iface, methods.RESUME),
+  resumeFromFile: (file) => dbusActions.sendMessage(service, vmPath, iface, methods.RESUME_FROM_FILE, file),
+  setDbKey: (key, value) => dbusActions.sendMessage(service, vmPath, iface, methods.SET_DB_KEY, key, value),
+  setDomstoreKey: (key, value) => dbusActions.sendMessage(service, vmPath, iface, methods.SET_DOMSTORE_KEY, key, value),
+  shutdown: () => dbusActions.sendMessage(service, vmPath, iface, methods.SHUTDOWN),
+  sleep: () => dbusActions.sendMessage(service, vmPath, iface, methods.SLEEP),
+  start: () => dbusActions.sendMessage(service, vmPath, iface, methods.START),
+  startInternal: () => dbusActions.sendMessage(service, vmPath, iface, methods.START_INTERNAL),
+  suspendToFile: (file) => dbusActions.sendMessage(service, vmPath, iface, methods.SUSPEND_TO_FILE, file),
+  switch: () => dbusActions.sendMessage(service, vmPath, iface, methods.SWITCH),
+  unpause: () => dbusActions.sendMessage(service, vmPath, iface, methods.UNPAUSE),
 
-    // unrestricted
-    unrestrictedGetProperty: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Get', unrestrictedIface, name),
-    unrestrictedGetAllProperties: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'GetAll', unrestrictedIface),
-    unrestrictedSetProperty: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Set', unrestrictedIface, name, value),
+  // auth
+  auth: () => dbusActions.sendMessage(service, vmPath, authIface, methods.AUTH),
+  authRequired: () => dbusActions.sendMessage(service, vmPath, authIface, methods.AUTH_REQUIRED),
 
+  // pci
+  addPtRule: (pciClass, vendorId, deviceId) => dbusActions.sendMessage(service, vmPath, pciIface, methods.ADD_PT_RULE, pciClass, vendorId, deviceId),
+  addPtRuleBdf: (bdf) => dbusActions.sendMessage(service, vmPath, pciIface, methods.ADD_PT_RULE_BDF, bdf),
+  deletePtRule: (pciClass, vnedorId, deviceId) => dbusActions.sendMessage(service, vmPath, pciIface, methods.DELETE_PT_RULE, pciClass, vnedorId, deviceId),
+  deletePtRuleBdf: (bdf) => dbusActions.sendMessage(service, vmPath, pciIface, methods.DELETE_PT_RULE_BDF, bdf),
+  listPtPciDevices: () => dbusActions.sendMessage(service, vmPath, pciIface, methods.LIST_PT_PCI_DEVICES),
+  listPtRules: () => dbusActions.sendMessage(service, vmPath, pciIface, methods.LIST_PT_RULES),
+
+  // product
+  getOvfEnvXml: () => dbusActions.sendMessage(service, vmPath, productIface, methods.GET_OVF_ENV_XML),
+  getProductProperty: () => dbusActions.sendMessage(service, vmPath, productIface, methods.GET_PRODUCT_PROPERTY),
+  listProductProperties: () => dbusActions.sendMessage(service, vmPath, productIface, methods.LIST_PRODUCT_PROPERTIES),
+  setProductProperty: (propertyId, value) => dbusActions.sendMessage(service, vmPath, productIface, methods.SET_PRODUCT_PROPERTY, propertyId, value),
+
+  // unrestricted
+  unrestrictedGetProperty: (name) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Get', unrestrictedIface, name),
+  unrestrictedGetAllProperties: () => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'GetAll', unrestrictedIface),
+  unrestrictedSetProperty: (name, value) => dbusActions.sendMessage(service, vmPath, freedesktopIface, 'Set', unrestrictedIface, name, value),
 });
 
 export default actions;
