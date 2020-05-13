@@ -1,5 +1,5 @@
 import dbusActions from '../../actions';
-import { signals, methods } from './constants';
+import { methods, signals } from './constants';
 import { INPUT_DAEMON_INITIALIZED } from './actions';
 
 const initialState = {

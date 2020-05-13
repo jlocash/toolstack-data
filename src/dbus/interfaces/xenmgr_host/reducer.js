@@ -4,7 +4,7 @@ import { methods, signals } from './constants';
 
 const initialState = {
   properties: {
-    state: 'idle',
+    state: '',
     total_mem: 0,
     free_mem: 0,
     avail_mem: 0,
@@ -34,6 +34,19 @@ const initialState = {
     capture_pcm: '',
   },
 
+  capture_devices: [],
+  cd_devices: [],
+  disk_devices: [],
+  gpu_devices: [],
+  isos: [],
+  playback_devices: [],
+  sound_card_controls: [],
+  sound_cards: [],
+
+  // powersettings
+  ac_lid_close_action: '',
+  battery_lid_close_action: '',
+  
   // metadata
   meta: {
     initialized: false,
@@ -68,15 +81,39 @@ const xenmgrHostReducer = (state = initialState, action) => {
               case methods.GET_SOUND_CARD_CONTROL:
               case methods.HIBERNATE:
               case methods.IS_SERVICE_RUNNING:
-              case methods.LIST_CAPTURE_DEVICES:
-              case methods.LIST_CD_DEVICES:
-              case methods.LIST_DISK_DEVICES:
-              case methods.LIST_GPU_DEVICES:
-              case methods.LIST_ISOS:
-              case methods.LIST_PCI_DEVICES:
-              case methods.LIST_PLAYBACK_DEVICES:
+              case methods.LIST_CAPTURE_DEVICES: {
+                const capture_devices = payload.received[0];
+                return Object.assign({}, state, { capture_devices });
+              }
+              case methods.LIST_CD_DEVICES: {
+                const cd_devices = payload.received[0];
+                return Object.assign({}, state, { cd_devices });
+              }
+              case methods.LIST_DISK_DEVICES: {
+                const disk_devices = payload.received[0];
+                return Object.assign({}, state, { disk_devices });
+              }
+              case methods.LIST_GPU_DEVICES: {
+                const gpu_devices = payload.received[0];
+                return Object.assign({}, state, { gpu_devices });
+              }
+              case methods.LIST_ISOS: {
+                const isos = payload.received[0];
+                return Object.assign({}, state, { isos });
+              }
+              case methods.LIST_PCI_DEVICES: {
+                const pci_devices = payload.received[0];
+                return Object.assign({}, state, { pci_devices });
+              }
+              case methods.LIST_PLAYBACK_DEVICES: {
+                const playback_devices = payload.received[0];
+                return Object.assign({}, state, { playback_devices });
+              }
+              case methods.LIST_SOUND_CARDS: {
+                const sound_cards = payload.received[0];
+                return Object.assign({}, state, { sound_cards });
+              }
               case methods.LIST_SOUND_CARD_CONTROLS:
-              case methods.LIST_SOUND_CARDS:
               case methods.LIST_UI_PLUGINS:
               case methods.REBOOT:
               case methods.SET_LICENSE:
@@ -94,8 +131,14 @@ const xenmgrHostReducer = (state = initialState, action) => {
               }
 
               // powersettings
-              case methods.GET_AC_LID_CLOSE_ACTION:
-              case methods.GET_BATTERY_LID_CLOSE_ACTION:
+              case methods.GET_AC_LID_CLOSE_ACTION: {
+                const ac_lid_close_action = payload.received[0];
+                return Object.assign({}, state, { ac_lid_close_action });
+              }
+              case methods.GET_BATTERY_LID_CLOSE_ACTION: {
+                const battery_lid_close_action = payload.received[0];
+                return Object.assign({}, state, { battery_lid_close_action });
+              }
               case methods.SET_AC_LID_CLOSE_ACTION:
               case methods.SET_BATTERY_LID_CLOSE_ACTION: {
                 return state;

@@ -1,17 +1,13 @@
 import dbusActions from '../../actions';
 import { methods } from './constants';
 
-export const XCPMD_INITIALIZED = 'XCPMD_INITIALIZED';
+export const BATTERY_INITIALIZED = 'BATTERY_INITIALIZED';
 
 const service = 'com.citrix.xenclient.xcpmd';
 const iface = service;
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
 const path = '/';
 
 const actions = {
-  getProperty: (name) => dbusActions.sendMessage(service, path, freedesktopIface, 'Get', iface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, path, freedesktopIface, 'GetAll', iface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, path, freedesktopIface, 'Set', iface, name, value),
   addRule: (name, conditions, actions, undoActions) => dbusActions.sendMessage(service, path, iface, methods.ADD_RULE, name, conditions, actions, undoActions),
   addVar: (name, value) => dbusActions.sendMessage(service, path, iface, methods.ADD_VAR, name, value),
   aggregateBatteryPercentage: () => dbusActions.sendMessage(service, path, iface, methods.AGGREGATE_BATTERY_PERCENTAGE),

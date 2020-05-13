@@ -3,8 +3,8 @@ import { methods } from './constants';
 
 export const VM_NIC_INITIALIZED = 'VM_NIC_INITIALIZED';
 
-const service = 'com.citrix.xenclient.vmnic';
-const iface = service;
+const service = 'com.citrix.xenclient.xenmgr';
+const iface = 'com.citrix.xenclient.vmnic';
 const freedesktopIface = 'org.freedesktop.DBus.Properties';
 
 const actions = (nicPath) => ({

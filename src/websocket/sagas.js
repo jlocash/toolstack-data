@@ -1,6 +1,6 @@
 import { eventChannel } from 'redux-saga';
 import {
-  call, take, all, put,
+  all, call, put, take,
 } from 'redux-saga/effects';
 import actions from './actions';
 import dbusActions, { messageTypes } from '../dbus/actions';
@@ -10,7 +10,6 @@ const createSocketConnection = () => new Promise((resolve, reject) => {
     const host = process.env.REMOTE_HOST || window.location.hostname;
     const port = process.env.REMOTE_PORT || 8080;
     const socket = new WebSocket(`ws://${host}:${port}`);
-
     socket.onopen = () => {
       resolve(socket);
     };
@@ -19,12 +18,12 @@ const createSocketConnection = () => new Promise((resolve, reject) => {
   }
 });
 
-const watchSendMessage = function* (socket) {
+function* watchSendMessage(socket) {
   while (true) {
     const { payload } = yield take(actions.SOCKET_SEND_MESSAGE);
     socket.send(JSON.stringify(payload));
   }
-};
+}
 
 const createSocketChannel = (socket) => eventChannel((emit) => {
   socket.onmessage = (event) => {
@@ -32,14 +31,12 @@ const createSocketChannel = (socket) => eventChannel((emit) => {
     emit(payload);
   };
 
-  const unsubscribe = () => {
+  return () => {
     socket.close();
   };
-
-  return unsubscribe;
 });
 
-const watchIncomingMessages = function* (socket) {
+function* watchIncomingMessages(socket) {
   const channel = yield call(createSocketChannel, socket);
   while (true) {
     const payload = yield take(channel);
@@ -58,9 +55,9 @@ const watchIncomingMessages = function* (socket) {
       }
     }
   }
-};
+}
 
-export const websocketSaga = function* () {
+export function* websocketSaga() {
   try {
     const socket = yield call(createSocketConnection);
     yield put({ type: actions.SOCKET_CONNECTION_ESTABLISHED });
@@ -72,4 +69,4 @@ export const websocketSaga = function* () {
   } catch (err) {
     yield put({ type: actions.SOCKET_CONNECTION_ERROR });
   }
-};
+}

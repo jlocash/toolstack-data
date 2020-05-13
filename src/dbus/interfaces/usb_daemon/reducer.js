@@ -1,6 +1,6 @@
 import dbusActions from '../../actions';
 import { USB_DEVICE_INITIALIZED } from './actions';
-import { signals, methods } from './constants';
+import { methods, signals } from './constants';
 
 const initialState = {};
 

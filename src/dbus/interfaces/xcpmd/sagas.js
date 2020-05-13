@@ -1,8 +1,9 @@
-import { put } from 'redux-saga/effects';
-import { XCPMD_INITIALIZED } from './actions';
+import { call } from 'redux-saga/effects';
+import { sendMessage } from '../../sagas.js';
+import actions from './actions';
 
-const initialize = function* () {
-  yield put({ type: XCPMD_INITIALIZED });
-};
+function* initialize() {
+  yield call(sendMessage, actions.batteriesPresent());
+}
 
 export default initialize;

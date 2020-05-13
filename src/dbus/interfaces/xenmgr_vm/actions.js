@@ -1,7 +1,7 @@
 import dbusActions from '../../actions';
 import { methods } from './constants';
 
-export const XENMGR_VM_INITIALIZED = 'XENMGR_VM_INITIALIZED';
+export const VM_INITIALIZED = 'VM_INITIALIZED';
 
 const service = 'com.citrix.xenclient.xenmgr';
 const iface = `${service}.vm`;

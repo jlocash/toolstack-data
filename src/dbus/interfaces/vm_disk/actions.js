@@ -3,8 +3,8 @@ import { methods } from './constants';
 
 export const VM_DISK_INITIALIZED = 'VM_DISK_INITIALIZED';
 
-const service = 'com.citrix.xenclient.vmdisk';
-const iface = service;
+const service = 'com.citrix.xenclient.xenmgr';
+const iface = 'com.citrix.xenclient.vmdisk';
 const freedesktopIface = 'org.freedesktop.DBus.Properties';
 
 const actions = (diskPath) => ({

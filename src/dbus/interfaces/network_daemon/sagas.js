@@ -1,26 +1,20 @@
-import { put, call, select } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas';
-import networkDomain, { NETWORK_DOMAIN_INITIALIZED } from '../network_domain/actions';
+import { all, call, put, select } from 'redux-saga/effects';
+import { sendMessage } from '../../sagas.js';
+import networkDomainActions, { NETWORK_DOMAIN_INITIALIZED } from '../network_domain/actions';
 import networkDaemon from './actions';
+import { loadNetwork } from '../network/sagas';
 
-import networkConfig, { NETWORK_INITIALIZED } from '../network/actions';
-
-const loadNdvm = function* (ndvmPath) {
-  yield call(sendMessage, networkDomain(ndvmPath).getAllProperties());
-  yield call(sendMessage, networkDomain(ndvmPath).listNetworks());
+function* loadNdvmNetworks(ndvmPath) {
+  yield call(sendMessage, networkDomainActions(ndvmPath).listNetworks());
   const networks = yield select((state) => state.dbus.ndvms[ndvmPath].networks);
+  yield all(Object.keys(networks).map(network => call(loadNetwork, ndvmPath, network)));
+}
 
-  // initialize each network
-  for (const network of Object.keys(networks)) {
-    yield call(sendMessage, networkConfig(network).getAllProperties());
-    yield put({
-      type: NETWORK_INITIALIZED,
-      payload: {
-        network,
-        ndvmPath,
-      },
-    });
-  }
+function* loadNdvm(ndvmPath) {
+  yield all([
+    call(sendMessage, networkDomainActions(ndvmPath).getAllProperties()),
+    call(loadNdvmNetworks, ndvmPath),
+  ]);
 
   yield put({
     type: NETWORK_DOMAIN_INITIALIZED,
@@ -28,16 +22,14 @@ const loadNdvm = function* (ndvmPath) {
       ndvmPath,
     },
   });
-};
+}
 
-const initialize = function* () {
+function* initialize() {
   yield call(sendMessage, networkDaemon.listBackends());
   const ndvms = yield select((state) => state.dbus.ndvms);
 
   // initialize each ndvm
-  for (const ndvmPath of Object.keys(ndvms)) {
-    yield call(loadNdvm, ndvmPath);
-  }
-};
+  yield all(Object.keys(ndvms).map(ndvmPath => call(loadNdvm, ndvmPath)));
+}
 
 export default initialize;

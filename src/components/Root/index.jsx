@@ -1,21 +1,20 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-const Root = ({ connected }) => {
-  if (connected) {
-    return (
-      <div>Connected</div>
-    );
-  }
+const Root = ({ connected, initialized }) => {
   return (
     <div>
-      Connecting
+      <div>{`connected: ${connected}`}</div>
+      <div>{`initialized: ${initialized}`}</div>
     </div>
   );
 };
 
-const mapStateToProps = (state) => ({
-  connected: state.websocket.connected,
-});
+const mapStateToProps = (state) => {
+  return {
+    connected: state.websocket.connected,
+    initialized: state.dbus.updatemgr.meta.initialized,
+  };
+};
 
 export default connect(mapStateToProps)(Root);

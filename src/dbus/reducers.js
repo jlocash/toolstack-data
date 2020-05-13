@@ -3,8 +3,7 @@ import inputDaemonReducer from './interfaces/input_daemon/reducer';
 import networkDaemonReducer from './interfaces/network_daemon/reducer';
 import updatemgrReducer from './interfaces/updatemgr/reducer';
 import usbReducer from './interfaces/usb_daemon/reducer';
-import vmDiskReducer from './interfaces/vm_disk/reducer';
-import vmNicReducer from './interfaces/vm_nic/reducer';
+import xcpmdReducer from './interfaces/xcpmd/reducer';
 import xenmgrReducer from './interfaces/xenmgr/reducer';
 import xenmgrHostReducer from './interfaces/xenmgr_host/reducer';
 import xenmgrUiReducer from './interfaces/xenmgr_ui/reducer';
@@ -15,8 +14,7 @@ const dbusReducer = combineReducers({
   ndvms: networkDaemonReducer,
   updatemgr: updatemgrReducer,
   usbDevices: usbReducer,
-  vmDisk: vmDiskReducer,
-  vmNic: vmNicReducer,
+  batteries: xcpmdReducer,
   xenmgr: xenmgrReducer,
   host: xenmgrHostReducer,
   ui: xenmgrUiReducer,

@@ -1,8 +1,14 @@
-import { put } from 'redux-saga/effects';
-import { VM_NIC_INITIALIZED } from './actions';
+import { call, put } from 'redux-saga/effects';
+import { sendMessage } from '../../sagas.js';
+import actions, { VM_NIC_INITIALIZED } from './actions';
 
-const initialize = function* () {
-  yield put({ type: VM_NIC_INITIALIZED });
-};
-
-export default initialize;
+export function* loadVmNic(vmPath, nicPath) {
+  yield call(sendMessage, actions(nicPath).getAllProperties());
+  yield put({
+    type: VM_NIC_INITIALIZED,
+    payload: {
+      vmPath,
+      nicPath,
+    },
+  });
+}

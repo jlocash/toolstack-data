@@ -1,20 +1,74 @@
 import dbusActions from '../../actions';
-import { XENMGR_VM_INITIALIZED } from './actions';
+import { VM_INITIALIZED } from './actions';
 import { methods } from './constants';
 import { methods as xenmgrMethods, signals as xenmgrSignals } from '../xenmgr/constants';
+
+const initialDiskState = {
+  properties: {},
+  meta: {
+    initialized: false,
+  },
+};
+
+const initialNicState = {
+  properties: {},
+  meta: {
+    initialized: false,
+  },
+};
+
+const initialVmState = {
+  properties: {
+
+  },
+
+  // private storage
+  domstore: {},
+
+  // vm
+  argo_firewall_rules: [],
+  net_firewall_rules: [],
+
+  // pci
+  pt_pci_devices: [],
+  pt_rules: [],
+
+  // product
+  product_properties: [],
+
+  // vmdisk
+  disks: {},
+
+  // vmnic
+  nics: {},
+
+  // metadata
+  meta: {
+    initialized: false,
+  },
+};
 
 const initialState = {};
 
 const xenmgrVmReducer = (state = initialState, action = {}) => {
-  const { payload } = action;
-  switch (action.type) {
-    case XENMGR_VM_INITIALIZED: {
-      break;
+  const { type, payload } = action;
+  switch (type) {
+    case VM_INITIALIZED: {
+      const { vmPath } = payload;
+      return Object.assign({}, state, {
+        [vmPath]: {
+          ...state[vmPath],
+          meta: {
+            initialized: true,
+          },
+        },
+      });
     }
     case dbusActions.DBUS_MESSAGE_COMPLETED: {
       if (payload.destination === 'com.citrix.xenclient.xenmgr') {
         switch (payload.interface) {
           case 'com.citrix.xenclient.xenmgr.vm': {
+            const vmPath = payload.path;
             switch (payload.method) {
               // vm
               case methods.ADD_ARGO_FIREWALL_RULE:
@@ -28,11 +82,63 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
               case methods.DESTROY:
               case methods.GET_DB_KEY:
               case methods.GET_DOMSTORE_KEY:
-              case methods.HIBERNATE:
-              case methods.LIST_ARGO_FIREWALL_RULES:
-              case methods.LIST_DISKS:
-              case methods.LIST_NET_FIREWALL_RULES:
-              case methods.LIST_NICS:
+              case methods.HIBERNATE: {
+                break;
+              }
+              case methods.LIST_ARGO_FIREWALL_RULES: {
+                const argo_firewall_rules = payload.received[0];
+                return Object.assign({}, state, {
+                  [vmPath]: {
+                    ...state[vmPath],
+                    argo_firewall_rules,
+                  },
+                });
+              }
+              case methods.LIST_DISKS: {
+                const received = payload.received[0];
+                const disks = {};
+                received.forEach(diskPath => {
+                  if (!state[vmPath].disks[diskPath]) {
+                    disks[diskPath] = { ...initialDiskState };
+                  }
+                });
+                return Object.assign({}, state, { 
+                  [vmPath]: {
+                    ...state[vmPath],
+                    disks: {
+                      ...state[vmPath].disks,
+                      ...disks,
+                    },
+                  },
+                });
+              }
+              case methods.LIST_NET_FIREWALL_RULES: {
+                const net_firewall_rules = payload.received[0];
+                return Object.assign({}, state, {
+                  [vmPath]: {
+                    ...state[vmPath],
+                    net_firewall_rules,
+                  },
+                });
+              }
+              case methods.LIST_NICS: {
+                const received = payload.received[0];
+                const nics = {};
+                received.forEach(nicPath => {
+                  if (!state[vmPath].nics[nicPath]) {
+                    nics[nicPath] = { ...initialNicState };
+                  }
+                });
+                return Object.assign({}, state, {
+                  [vmPath]: {
+                    ...state[vmPath],
+                    nics: {
+                      ...state[vmPath].nics,
+                      ...nics,
+                    },
+                  },
+                });
+              }
               case methods.PAUSE:
               case methods.READ_ICON:
               case methods.REBOOT:
@@ -61,9 +167,24 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
               case methods.ADD_PT_RULE_BDF:
               case methods.DELETE_PT_RULE:
               case methods.DELETE_PT_RULE_BDF:
-              case methods.LIST_PT_PCI_DEVICES:
+                break;
+              case methods.LIST_PT_PCI_DEVICES: {
+                const pt_pci_devices = payload.received[0];
+                return Object.assign({}, state, {
+                  [vmPath]: {
+                    ...state[vmPath],
+                    pt_pci_devices,
+                  },
+                });
+              }
               case methods.LIST_PT_RULES: {
-                return state;
+                const pt_rules = payload.received[0];
+                return Object.assign({}, state, {
+                  [vmPath]: {
+                    ...state[vmPath],
+                    pt_rules,
+                  },
+                });
               }
 
               // product
@@ -79,19 +200,14 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
           case 'com.citrix.xenclient.xenmgr': {
             switch (payload.method) {
               case xenmgrMethods.LIST_VMS: {
-                const newVms = {};
+                const vms = {};
                 const received = payload.received[0];
                 received.forEach((vmPath) => {
                   if (!state[vmPath]) {
-                    newVms[vmPath] = {
-                      properties: {},
-                      meta: {
-                        intialized: false,
-                      },
-                    };
+                    vms[vmPath] = { ...initialVmState };
                   }
                 });
-                return { ...state, ...newVms };
+                return { ...state, ...vms };
               }
             }
             break;
@@ -127,8 +243,11 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
             ...state,
             [vmPath]: {
               ...state[vmPath],
-              state: vmState,
-              acpi_state: acpiState,
+              properties: {
+                ...state[vmPath].properties,
+                state: vmState,
+                acpi_state: acpiState,
+              },
             },
           };
         }

@@ -1,27 +1,46 @@
-import { put, call, select } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas';
-import vm, { XENMGR_VM_INITIALIZED } from './actions';
+import { all, call, put, select } from 'redux-saga/effects';
+import { sendMessage } from '../../sagas.js';
+import actions, { VM_INITIALIZED } from './actions';
 import xenmgr from '../xenmgr/actions';
+import { loadVmDisk } from '../vm_disk/sagas';
+import { loadVmNic } from '../vm_nic/sagas';
 
+function* loadVmNics(vmPath) {
+  yield call(sendMessage, actions(vmPath).listNics());
+  const vmNics = yield select(state => state.dbus.vms[vmPath].nics);
+  yield all(Object.keys(vmNics).map(nicPath => call(loadVmNic, vmPath, nicPath)));
+}
 
-const loadVm = function* (vmPath) {
-  yield call(sendMessage, vm(vmPath).getAllProperties());
+function* loadVmDisks(vmPath) {
+  yield call(sendMessage, actions(vmPath).listDisks());
+  const vmDisks = yield select(state => state.dbus.vms[vmPath].disks);
+  yield all(Object.keys(vmDisks).map(diskPath => call(loadVmDisk, vmPath, diskPath)));
+}
+
+function* loadVm(vmPath) {
+  yield all([
+    call(sendMessage, actions(vmPath).getAllProperties()),
+    call(sendMessage, actions(vmPath).listArgoFirewallRules()),
+    call(sendMessage, actions(vmPath).listPtPciDevices()),
+    call(sendMessage, actions(vmPath).listPtRules()),
+    call(sendMessage, actions(vmPath).listNetFirewallRules()),
+    call(sendMessage, actions(vmPath).listProductProperties()),
+    call(loadVmNics, vmPath),
+    call(loadVmDisks, vmPath),
+  ]);
+
   yield put({
-    type: XENMGR_VM_INITIALIZED,
+    type: VM_INITIALIZED,
     payload: {
       vmPath,
     },
   });
-};
+}
 
-const initialize = function* () {
+function* initialize() {
   yield call(sendMessage, xenmgr.listVms());
   const vms = yield select((state) => state.dbus.vms);
-  for (const vmPath of Object.keys(vms)) {
-    yield call(loadVm, vmPath);
-  }
-
-  yield put({ type: XENMGR_VM_INITIALIZED });
-};
+  yield all(Object.keys(vms).map(vmPath => call(loadVm, vmPath)));
+}
 
 export default initialize;
