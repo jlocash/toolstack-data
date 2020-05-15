@@ -2,9 +2,14 @@
   "name": "toolstack-data",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "GPL-2",
+  "license": "GPL-2.0",
+  "description": "The OpenXT User Interface",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jlocash/toolstack-data.git"
+  },
   "scripts": {
-    "build": "npx webpack --mode production",
+    "build": "rm -rf ./dist/* && npx webpack --mode production",
     "start": "npx webpack-dev-server --mode development --devtool inline-source-map --host 0.0.0.0 --open --hot",
     "deploy": "npm i && npm run build && rsync -r ./dist/ root@${DEST}:/usr/lib/xui/",
     "lint": "npx eslint src --ext .js --fix"
@@ -18,8 +23,9 @@
     "babel-loader": "^8.1.0",
     "babel-polyfill": "^6.26.0",
     "css-loader": "^3.5.3",
-    "eslint": "^7.0.0",
-    "eslint-plugin-react": "^7.19.0",
+    "eslint": "^6.0.0",
+    "eslint-plugin-react": "^7.20.0",
+    "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.3.0",
     "source-map-loader": "^0.2.4",
     "style-loader": "^1.2.1",
@@ -28,10 +34,13 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
+    "bootstrap": "^4.5.0",
     "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
-    "react-router-dom": "^5.1.2",
+    "react-icons": "^3.10.0",
     "react-redux": "^7.2.0",
+    "react-router-dom": "^5.2.0",
     "redux": "^4.0.5",
     "redux-saga": "^1.1.3"
   }

@@ -1,5 +1,5 @@
 import dbusActions from '../../actions';
-import { NETWORK_DOMAIN_INITIALIZED } from '../network_domain/actions';
+import { NDVM_INITIALIZED } from '../network_domain/actions';
 import { methods as daemonMethods } from './constants';
 import { methods as domainMethods } from '../network_domain/constants';
 import { NETWORK_INITIALIZED } from '../network/actions';
@@ -9,7 +9,7 @@ const initialState = {};
 const networkDaemonReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
   switch (type) {
-    case NETWORK_DOMAIN_INITIALIZED: {
+    case NDVM_INITIALIZED: {
       const { ndvmPath } = payload;
       return {
         ...state,
@@ -22,15 +22,15 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
       };
     }
     case NETWORK_INITIALIZED: {
-      const { network, ndvmPath } = payload;
+      const { networkPath, ndvmPath } = payload;
       return {
         ...state,
         [ndvmPath]: {
           ...state[ndvmPath],
           networks: {
             ...state[ndvmPath].networks,
-            [network]: {
-              ...state[ndvmPath].networks[network],
+            [networkPath]: {
+              ...state[ndvmPath].networks[networkPath],
               meta: {
                 initialized: true,
               },

@@ -1,0 +1,37 @@
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.max-height {
+  height: 100%;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.center-vertical {
+  justify-content: center;
+}
+
+.center-horizontal {
+  align-content: center;
+}
+
+.text-align-center {
+  text-align: center;
+}
+
+.margin-auto {
+  margin: auto;
+}

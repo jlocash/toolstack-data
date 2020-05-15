@@ -1,7 +1,7 @@
 import dbusActions from '../../actions';
 import { methods } from './constants';
 
-export const NETWORK_DOMAIN_INITIALIZED = 'NETWORK_DOMAIN_INITIALZED';
+export const NDVM_INITIALIZED = 'NDVM_INITIALIZED';
 
 const service = 'com.citrix.xenclient.networkdaemon';
 const iface = 'com.citrix.xenclient.networkdomain';

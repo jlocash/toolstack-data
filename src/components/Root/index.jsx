@@ -1,20 +1,17 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import Dock from '../../containers/Dock';
+import HeaderBar from '../../containers/HeaderBar';
+import Wallpaper from '../../containers/Wallpaper';
 
-const Root = ({ connected, initialized }) => {
+const Root = () => {
   return (
-    <div>
-      <div>{`connected: ${connected}`}</div>
-      <div>{`initialized: ${initialized}`}</div>
-    </div>
+    <Wallpaper>
+      <div className='flex-column max-height space-between'>
+        <HeaderBar />
+        <Dock />
+      </div>
+    </Wallpaper>
   );
 };
 
-const mapStateToProps = (state) => {
-  return {
-    connected: state.websocket.connected,
-    initialized: state.dbus.updatemgr.meta.initialized,
-  };
-};
-
-export default connect(mapStateToProps)(Root);
+export default Root;

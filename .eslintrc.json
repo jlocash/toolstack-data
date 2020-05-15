@@ -55,6 +55,12 @@
             "error",
             "always"
         ],
+        "key-spacing": [
+            "error",
+            {
+                "afterColon": true
+            }
+        ],
         "react/prop-types": [
             0
         ]

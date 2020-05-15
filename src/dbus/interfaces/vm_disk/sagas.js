@@ -6,7 +6,7 @@ export function* loadVmDisk(vmPath, diskPath) {
   yield call(sendMessage, actions(diskPath).getAllProperties());
   yield put({
     type: VM_DISK_INITIALIZED,
-    payload:{
+    payload: {
       vmPath, 
       diskPath,
     },

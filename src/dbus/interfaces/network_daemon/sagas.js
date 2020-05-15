@@ -1,7 +1,7 @@
 import { all, call, put, select } from 'redux-saga/effects';
 import { sendMessage } from '../../sagas.js';
-import networkDomainActions, { NETWORK_DOMAIN_INITIALIZED } from '../network_domain/actions';
-import networkDaemon from './actions';
+import networkDomainActions, { NDVM_INITIALIZED } from '../network_domain/actions';
+import actions from './actions';
 import { loadNetwork } from '../network/sagas';
 
 function* loadNdvmNetworks(ndvmPath) {
@@ -17,7 +17,7 @@ function* loadNdvm(ndvmPath) {
   ]);
 
   yield put({
-    type: NETWORK_DOMAIN_INITIALIZED,
+    type: NDVM_INITIALIZED,
     payload: {
       ndvmPath,
     },
@@ -25,7 +25,7 @@ function* loadNdvm(ndvmPath) {
 }
 
 function* initialize() {
-  yield call(sendMessage, networkDaemon.listBackends());
+  yield call(sendMessage, actions.listBackends());
   const ndvms = yield select((state) => state.dbus.ndvms);
 
   // initialize each ndvm

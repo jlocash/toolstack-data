@@ -34,6 +34,7 @@ const initialState = {
     capture_pcm: '',
   },
 
+  // host
   capture_devices: [],
   cd_devices: [],
   disk_devices: [],
@@ -42,6 +43,16 @@ const initialState = {
   playback_devices: [],
   sound_card_controls: [],
   sound_cards: [],
+  seconds_from_epoch: 0,
+
+  // installer
+  eula: null,
+  install_state: {
+    deferred_accept_eula: '',
+    deferred_dom0_password: '',
+    deferred_kb_layout: '',
+    deferred_language: '',
+  },
 
   // powersettings
   ac_lid_close_action: '',
@@ -76,11 +87,16 @@ const xenmgrHostReducer = (state = initialState, action) => {
               case methods.CONFIGURE_GPU_PLACEMENT:
               case methods.EJECT_CD_DEVICE:
               case methods.GET_CD_DEVICE_ASSIGNMENT:
-              case methods.GET_GPU_PLACEMENT:
-              case methods.GET_SECONDS_FROM_EPOCH:
               case methods.GET_SOUND_CARD_CONTROL:
               case methods.HIBERNATE:
-              case methods.IS_SERVICE_RUNNING:
+              case methods.IS_SERVICE_RUNNING: 
+              case methods.GET_GPU_PLACEMENT: {
+                break;
+              }
+              case methods.GET_SECONDS_FROM_EPOCH: {
+                const seconds_from_epoch = payload.received[0];
+                return Object.assign({}, state, { seconds_from_epoch });
+              }
               case methods.LIST_CAPTURE_DEVICES: {
                 const capture_devices = payload.received[0];
                 return Object.assign({}, state, { capture_devices });
@@ -124,8 +140,18 @@ const xenmgrHostReducer = (state = initialState, action) => {
               }
 
               // installer
-              case methods.GET_EULA:
-              case methods.GET_INSTALLSTATE:
+              case methods.GET_EULA: {
+                const eula = payload.received[0];
+                return Object.assign({}, state, { eula });
+              }
+              case methods.GET_INSTALLSTATE: {
+                const received = payload.received[0];
+                const install_state = {};
+                Object.keys(received).forEach(key => {
+                  install_state[key.replace(/-/g, '_')] = received[key];
+                });
+                return Object.assign({}, state, { install_state });
+              }
               case methods.PROGRESS_INSTALLSTATE: {
                 return state;
               }
