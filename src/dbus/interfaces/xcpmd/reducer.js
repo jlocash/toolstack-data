@@ -9,21 +9,22 @@ const xcpmdReducer = (state = initialState, action = {}) => {
   switch (type) {
     case BATTERY_INITIALIZED: {
       const { batteryId } = payload;
-      return Object.assign({}, state, {
+      return {
+        ...state,
         [batteryId]: {
           ...state[batteryId],
           meta: {
             initialized: true,
           },
         },
-      });
+      };
     }
     case dbusActions.DBUS_MESSAGE_COMPLETED: {
       if (payload.destination === 'com.citrix.xenclient.xcpmd') {
         if (payload.interface === 'com.citrix.xenclient.xcpmd') {
           switch (payload.method) {
             case methods.BATTERIES_PRESENT: {
-              const received = payload.received[0];
+              const [received] = payload.received;
               const batteries = {};
               received.forEach(id => {
                 batteries[id] = {
@@ -32,7 +33,7 @@ const xcpmdReducer = (state = initialState, action = {}) => {
                   },
                 };
               });
-              return Object.assign({}, state, { ...batteries });
+              return { ...state, ...batteries };
             }
           }
         }

@@ -99,16 +99,16 @@ const xenmgrReducer = (state = initialState, action = {}) => {
           case 'org.freedesktop.DBus.Properties': {
             if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.config') {
               if (payload.method === 'GetAll') {
-                const incomingProperties = payload.received[0];
-                const newProperties = { ...state.properties };
-                Object.keys(incomingProperties).forEach((key) => {
-                  newProperties[key.replace(/-/g, '_')] = incomingProperties[key];
+                const [received] = payload.received;
+                const properties = { ...state.properties };
+                Object.keys(received).forEach((key) => {
+                  properties[key.replace(/-/g, '_')] = received[key];
                 });
 
                 return {
                   ...state,
                   ...state,
-                  properties: newProperties,
+                  properties,
                 };
               }
             }

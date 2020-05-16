@@ -8,6 +8,15 @@ const initialState = {
     numlock_restore_on_switch: false,
   },
 
+  keyboard_layout: '',
+  keyboard_layouts: [],
+  mouse_speed: 0,
+  touchpad: {
+    tap_to_click: false,
+    scrolling: false,
+    speed: 0,
+  },
+
   // metadata
   meta: {
     initialized: false,
@@ -33,12 +42,12 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
           }
           case 'org.freedesktop.DBus.Properties': {
             if (payload.method === 'GetAll') {
-              const received = payload.received[0];
+              const [received] = payload.received;
               const properties = {};
               Object.keys(received).forEach((key) => {
                 properties[key.replace(/-/g, '_')] = received[key];
               });
-              return Object.assign({}, state, { properties });
+              return { ...state, properties };
             }
             break;
           }
@@ -62,13 +71,26 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
           case methods.DIVERT_MOUSE_FOCUS:
           case methods.FOCUS_MODE:
           case methods.GET_AUTH_ON_BOOT:
-          case methods.GET_CURRENT_KB_LAYOUT:
+            break;
+          case methods.GET_CURRENT_KB_LAYOUT: {
+            const [keyboard_layout] = payload.received;
+            return { ...state, keyboard_layout };
+          }
           case methods.GET_FOCUS_DOMID:
-          case methods.GET_IDLE_TIME:
-          case methods.GET_KB_LAYOUTS:
+          case methods.GET_IDLE_TIME: {
+            break;
+          }
+          case methods.GET_KB_LAYOUTS: {
+            const [keyboard_layouts] = payload.received;
+            return { ...state, keyboard_layouts };
+          }
           case methods.GET_LAST_INPUT_TIME:
           case methods.GET_LID_STATE:
-          case methods.GET_MOUSE_SPEED:
+            break;
+          case methods.GET_MOUSE_SPEED: {
+            const [mouse_speed] = payload.received;
+            return { ...state, mouse_speed };
+          }
           case methods.GET_PLATFORM_USER:
           case methods.GET_REMOTE_USER_HASH:
           case methods.GET_USER_KEYDIR:
@@ -84,7 +106,25 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
           case methods.STOP_MOUSE_DIVERT:
           case methods.SWITCH_FOCUS:
           case methods.TOUCH:
-          case methods.TOUCHPAD_GET:
+            break;
+          case methods.TOUCHPAD_GET: {
+            const touchpad = { ...state.touchpad };
+            switch (payload.sent[0]) {
+              case 'tap-to-click-enable': {
+                touchpad.tap_to_click_enable = payload.received[0];
+                return { ...state, touchpad };
+              }
+              case 'scrolling-enable': {
+                touchpad.scrolling_enable = payload.received[0];
+                return { ...state, touchpad };
+              }
+              case 'speed': {
+                touchpad.speed = payload.received[0];
+                return { ...state, touchpad };
+              }
+            }
+            break;
+          }
           case methods.TOUCHPAD_SET:
           case methods.UPDATE_SEAMLESS_MOUSE_SETTINGS: {
             return state;

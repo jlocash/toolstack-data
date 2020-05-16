@@ -8,6 +8,8 @@ import xenmgrReducer from './interfaces/xenmgr/reducer';
 import xenmgrHostReducer from './interfaces/xenmgr_host/reducer';
 import xenmgrUiReducer from './interfaces/xenmgr_ui/reducer';
 import xenmgrVmReducer from './interfaces/xenmgr_vm/reducer';
+import vmNicReducer from './interfaces/vm_nic/reducer';
+import vmDiskReducer from './interfaces/vm_disk/reducer';
 
 const dbusReducer = combineReducers({
   input: inputDaemonReducer,
@@ -19,6 +21,8 @@ const dbusReducer = combineReducers({
   host: xenmgrHostReducer,
   ui: xenmgrUiReducer,
   vms: xenmgrVmReducer,
+  vmNics: vmNicReducer,
+  vmDisks: vmDiskReducer,
 });
 
 export default dbusReducer;

@@ -1,4 +1,18 @@
 
+export const WALLPAPER_DIR = 'wallpaper';
+
+export const DEFAULT_WALLPAPERS = [
+  'images/wallpaper/s1.png',
+  'images/wallpaper/s2.png',
+  'images/wallpaper/s3.png',
+  'images/wallpaper/s4.png',
+  'images/wallpaper/s5.png',
+  'images/wallpaper/s6.png',
+  'images/wallpaper/s7.png',
+  'images/wallpaper/s8.png',
+  'images/wallpaper/s9.png',
+];
+
 export const signals = {
   // host
   STATE_CHANGED: 'state_changed',

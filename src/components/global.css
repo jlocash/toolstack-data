@@ -20,11 +20,15 @@
   justify-content: space-between;
 }
 
-.center-vertical {
+.justify-content-center {
   justify-content: center;
 }
 
-.center-horizontal {
+.justify-content-flex-end {
+  justify-content: flex-end;
+}
+
+.align-content-center {
   align-content: center;
 }
 
@@ -32,6 +36,27 @@
   text-align: center;
 }
 
+.text-white {
+  color: white;
+}
+
 .margin-auto {
   margin: auto;
+}
+
+.padding-vertical-10 {
+  padding: 10px 0px 10px 0px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.lg-switch {
+  width: 20px;
+  height: 20px;
 }

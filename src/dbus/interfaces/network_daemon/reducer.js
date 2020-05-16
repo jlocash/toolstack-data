@@ -48,7 +48,7 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
               switch (payload.method) {
                 case daemonMethods.LIST_BACKENDS: {
                   const untracked = {};
-                  const received = payload.received[0];
+                  const [received] = payload.received;
                   received.forEach((ndvmPath) => {
                     if (!state[ndvmPath]) {
                       untracked[ndvmPath] = {
@@ -69,7 +69,7 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
               switch (payload.method) {
                 case domainMethods.LIST_NETWORKS: {
                   const ndvmPath = payload.path;
-                  const received = payload.received[0];
+                  const [received] = payload.received;
                   const untracked = {};
                   received.forEach((network) => {
                     if (!state[ndvmPath].networks[network]) {
@@ -82,7 +82,8 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
                     }
                   });
 
-                  return Object.assign({}, state, {
+                  return {
+                    ...state,
                     [ndvmPath]: {
                       ...state[ndvmPath],
                       networks: {
@@ -90,7 +91,7 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
                         ...untracked,
                       },
                     },
-                  });
+                  };
                 }
               }
               break;
@@ -100,7 +101,7 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
                 case 'com.citrix.xenclient.networkdomain.config': {
                   if (payload.method === 'GetAll') {
                     const ndvmPath = payload.path;
-                    const received = payload.received[0];
+                    const [received] = payload.received;
                     const properties = {};
                     Object.keys(received).forEach((key) => {
                       properties[key.replace(/-/g, '_')] = received[key];
@@ -119,7 +120,7 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
                 case 'com.citrix.xenclient.network.config': {
                   if (payload.method === 'GetAll') {
                     const network = payload.path;
-                    const received = payload.received[0];
+                    const [received] = payload.received;
                     const properties = {};
                     Object.keys(received).forEach((key) => {
                       properties[key.replace(/-/g, '_')] = received[key];

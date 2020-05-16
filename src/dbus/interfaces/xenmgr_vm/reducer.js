@@ -1,21 +1,7 @@
 import dbusActions from '../../actions';
-import { VM_INITIALIZED } from './actions';
+import { SET_VM_INITIALIZED } from './actions';
 import { methods } from './constants';
 import { methods as xenmgrMethods, signals as xenmgrSignals } from '../xenmgr/constants';
-
-const initialDiskState = {
-  properties: {},
-  meta: {
-    initialized: false,
-  },
-};
-
-const initialNicState = {
-  properties: {},
-  meta: {
-    initialized: false,
-  },
-};
 
 const initialVmState = {
   properties: {
@@ -28,6 +14,8 @@ const initialVmState = {
   // vm
   argo_firewall_rules: [],
   net_firewall_rules: [],
+  disks: [],
+  nics: [],
 
   // pci
   pt_pci_devices: [],
@@ -35,12 +23,6 @@ const initialVmState = {
 
   // product
   product_properties: [],
-
-  // vmdisk
-  disks: {},
-
-  // vmnic
-  nics: {},
 
   // metadata
   meta: {
@@ -53,16 +35,17 @@ const initialState = {};
 const xenmgrVmReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
   switch (type) {
-    case VM_INITIALIZED: {
-      const { vmPath } = payload;
-      return Object.assign({}, state, {
+    case SET_VM_INITIALIZED: {
+      const { vmPath, initialized } = payload;
+      return {
+        ...state,
         [vmPath]: {
           ...state[vmPath],
           meta: {
-            initialized: true,
+            initialized,
           },
         },
-      });
+      };
     }
     case dbusActions.DBUS_MESSAGE_COMPLETED: {
       if (payload.destination === 'com.citrix.xenclient.xenmgr') {
@@ -86,58 +69,44 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
                 break;
               }
               case methods.LIST_ARGO_FIREWALL_RULES: {
-                const argo_firewall_rules = payload.received[0];
-                return Object.assign({}, state, {
+                const [argo_firewall_rules] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
                     argo_firewall_rules,
                   },
-                });
+                };
               }
               case methods.LIST_DISKS: {
-                const received = payload.received[0];
-                const disks = {};
-                received.forEach(diskPath => {
-                  if (!state[vmPath].disks[diskPath]) {
-                    disks[diskPath] = { ...initialDiskState };
-                  }
-                });
-                return Object.assign({}, state, { 
+                const [disks] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    disks: {
-                      ...state[vmPath].disks,
-                      ...disks,
-                    },
+                    disks,
                   },
-                });
+                };
               }
               case methods.LIST_NET_FIREWALL_RULES: {
-                const net_firewall_rules = payload.received[0];
-                return Object.assign({}, state, {
+                const [net_firewall_rules] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
                     net_firewall_rules,
                   },
-                });
+                };
               }
               case methods.LIST_NICS: {
-                const received = payload.received[0];
-                const nics = {};
-                received.forEach(nicPath => {
-                  if (!state[vmPath].nics[nicPath]) {
-                    nics[nicPath] = { ...initialNicState };
-                  }
-                });
-                return Object.assign({}, state, {
+                const [nics] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    nics: {
-                      ...state[vmPath].nics,
-                      ...nics,
-                    },
+                    nics,
                   },
-                });
+                };
               }
               case methods.PAUSE:
               case methods.READ_ICON:
@@ -169,22 +138,24 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
               case methods.DELETE_PT_RULE_BDF:
                 break;
               case methods.LIST_PT_PCI_DEVICES: {
-                const pt_pci_devices = payload.received[0];
-                return Object.assign({}, state, {
+                const [pt_pci_devices] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
                     pt_pci_devices,
                   },
-                });
+                };
               }
               case methods.LIST_PT_RULES: {
-                const pt_rules = payload.received[0];
-                return Object.assign({}, state, {
+                const [pt_rules] = payload.received;
+                return {
+                  ...state,
                   [vmPath]: {
                     ...state[vmPath],
                     pt_rules,
                   },
-                });
+                };
               }
 
               // product
@@ -201,7 +172,7 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
             switch (payload.method) {
               case xenmgrMethods.LIST_VMS: {
                 const vms = {};
-                const received = payload.received[0];
+                const [received] = payload.received;
                 received.forEach((vmPath) => {
                   if (!state[vmPath]) {
                     vms[vmPath] = { ...initialVmState };
@@ -213,21 +184,24 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
             break;
           }
           case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.vm') {
-              if (payload.method === 'GetAll') {
-                const vmPath = payload.path;
-                const received = payload.received[0];
-                const properties = {};
-                Object.keys(received).forEach((key) => {
-                  properties[key.replace(/-/g, '_')] = received[key];
-                });
-                return {
-                  ...state,
-                  [vmPath]: {
-                    ...state[vmPath],
-                    properties,
-                  },
-                };
+            switch (payload.sent[0]) {
+              case 'com.citrix.xenclient.xenmgr.vm': {
+                if (payload.method === 'GetAll') {
+                  const vmPath = payload.path;
+                  const [received] = payload.received;
+                  const properties = { ...state[vmPath].properties };
+                  Object.keys(received).forEach((key) => {
+                    properties[key.replace(/-/g, '_')] = received[key];
+                  });
+                  return {
+                    ...state,
+                    [vmPath]: {
+                      ...state[vmPath],
+                      properties,
+                    },
+                  };
+                }
+                break;
               }
             }
           }
@@ -237,19 +211,35 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
       if (payload.interface === 'com.citrix.xenclient.xenmgr') {
-        if (payload.member === xenmgrSignals.VM_STATE_CHANGED) {
-          const [, vmPath, vmState, acpiState] = payload.args;
-          return {
-            ...state,
-            [vmPath]: {
-              ...state[vmPath],
-              properties: {
-                ...state[vmPath].properties,
-                state: vmState,
-                acpi_state: acpiState,
+        switch (payload.member) {
+          case xenmgrSignals.VM_STATE_CHANGED: {
+            const [, vmPath, vmState, acpiState] = payload.args;
+            return {
+              ...state,
+              [vmPath]: {
+                ...state[vmPath],
+                properties: {
+                  ...state[vmPath].properties,
+                  state: vmState,
+                  acpi_state: acpiState,
+                },
               },
-            },
-          };
+            };
+          }
+          case xenmgrSignals.VM_CREATED: {
+            // usually followed by a xenmgrSignals.VM_CONFIG_CHANGED
+            const [, vmPath] = payload.args;
+            return {
+              ...state,
+              [vmPath]: { ...initialVmState },
+            };
+          }
+          case xenmgrSignals.VM_DELETED: {
+            const [, vmPath] = payload.args;
+            const newState = { ...state };
+            delete newState[vmPath];
+            return newState;
+          }
         }
       }
       break;

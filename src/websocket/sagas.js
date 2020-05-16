@@ -1,6 +1,6 @@
 import { eventChannel } from 'redux-saga';
 import {
-  all, call, put, take,
+  all, call, fork, put, take, select,
 } from 'redux-saga/effects';
 import actions from './actions';
 import dbusActions, { messageTypes } from '../dbus/actions';
@@ -18,10 +18,25 @@ const createSocketConnection = () => new Promise((resolve, reject) => {
   }
 });
 
+function* sendMessage(socket, payload) {
+  yield put({ type: actions.SOCKET_INCREMENT_OUTGOING });
+  socket.send(JSON.stringify(payload));
+}
+
 function* watchSendMessage(socket) {
   while (true) {
     const { payload } = yield take(actions.SOCKET_SEND_MESSAGE);
-    socket.send(JSON.stringify(payload));
+    const { outgoing, queue } = yield select(state => state.websocket);
+    if (outgoing < 30 && !queue.length) {
+      yield fork(sendMessage, socket, payload);
+    } else {
+      yield put({
+        type: actions.SOCKET_QUEUE_ADD,
+        payload: {
+          message: payload,
+        },
+      });
+    }
   }
 }
 
@@ -36,6 +51,15 @@ const createSocketChannel = (socket) => eventChannel((emit) => {
   };
 });
 
+function* handleQueueNext(socket) {
+  const { queue } = yield select(state => state.websocket);
+  if (queue.length) {
+    const payload = queue[0];
+    yield put({ type: actions.SOCKET_QUEUE_REMOVE });
+    yield call(sendMessage, socket, payload);
+  }
+}
+
 function* watchIncomingMessages(socket) {
   const channel = yield call(createSocketChannel, socket);
   while (true) {
@@ -47,10 +71,14 @@ function* watchIncomingMessages(socket) {
       }
       case messageTypes.RESPONSE: {
         yield put({ type: dbusActions.DBUS_RESPONSE_RECEIVED, payload });
+        yield put({ type: actions.SOCKET_DECREMENT_OUTGOING });
+        yield fork(handleQueueNext, socket);
         break;
       }
       case messageTypes.ERROR: {
         yield put({ type: dbusActions.DBUS_ERROR_RECEIVED, payload });
+        yield put({ type: actions.SOCKET_DECREMENT_OUTGOING });
+        yield fork(handleQueueNext, socket);
         break;
       }
     }
@@ -68,5 +96,6 @@ export function* websocketSaga() {
     ]);
   } catch (err) {
     yield put({ type: actions.SOCKET_CONNECTION_ERROR });
+    console.log(err);
   }
 }

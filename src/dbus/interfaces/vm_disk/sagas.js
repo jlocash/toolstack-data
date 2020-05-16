@@ -7,7 +7,7 @@ export function* loadVmDisk(vmPath, diskPath) {
   yield put({
     type: VM_DISK_INITIALIZED,
     payload: {
-      vmPath, 
+      vmPath,
       diskPath,
     },
   });

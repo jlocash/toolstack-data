@@ -1,11 +1,7 @@
-.system-tray-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-}
 
 .system-tray-icon {
-  padding: 7px 10px 7px 10px;
+  padding: 5px 10px 5px 10px;
   align-self: center;
   height: 100%;
+  cursor: pointer;
 }

@@ -7,8 +7,10 @@ import xc_wall_waterdrops_1280 from '../../assets/images/wallpaper/xc_wall_water
 import xc_wall_3Dwires_1280 from '../../assets/images/wallpaper/xc_wall_3Dwires_1280.png';
 import xc_wall_circuit_1280 from '../../assets/images/wallpaper/xc_wall_circuit_1280.png';
 import xc_wall_flare_1280 from '../../assets/images/wallpaper/xc_wall_flare_1280.png';
+import MojaveWallpaper from '../../assets/images/wallpaper/macos-mojave-night-mode-stock-0y-1920x1080.jpg';
 
 const getWallpaper = state => {
+  return MojaveWallpaper;
   const { wallpaper } = state.dbus.ui.properties;
   if (!wallpaper) {
     return xc_wall_light_1280;

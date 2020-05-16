@@ -50,10 +50,10 @@ const updatemgrReducer = (state = initialState, action = {}) => {
           case 'org.freedesktop.DBus.Properties': {
             if (payload.sent[0] === 'com.citrix.xenclient.updatemgr') {
               if (payload.method === 'GetAll') {
-                const incomingProperties = payload.received[0];
+                const [received] = payload.received;
                 const newProperties = { ...state.properties };
-                Object.keys(incomingProperties).forEach((key) => {
-                  newProperties[key.replace(/-/g, '_')] = incomingProperties[key];
+                Object.keys(received).forEach((key) => {
+                  newProperties[key.replace(/-/g, '_')] = received[key];
                 });
 
                 return {

@@ -9,14 +9,15 @@ const usbReducer = (state = initialState, action = {}) => {
   switch (type) {
     case USB_DEVICE_INITIALIZED: {
       const { deviceId } = payload;
-      return Object.assign({}, state, {
+      return {
+        ...state,
         [deviceId]: {
           ...state[deviceId],
           meta: {
             initialized: true,
           },
         },
-      });
+      };
     }
     case dbusActions.DBUS_MESSAGE_COMPLETED: {
       if (payload.destination === 'com.citrix.xenclient.usbdaemon') {
@@ -26,7 +27,7 @@ const usbReducer = (state = initialState, action = {}) => {
             return state;
           }
           case methods.LIST_DEVICES: {
-            const received = payload.received[0];
+            const [received] = payload.received;
             const devices = {};
             received.forEach(deviceId => {
               if (!state[deviceId]) {
@@ -41,12 +42,13 @@ const usbReducer = (state = initialState, action = {}) => {
                 };
               }
             });
-            return Object.assign({}, state, { ...devices });
+            return { ...state, ...devices };
           }
           case methods.GET_DEVICE_INFO: {
             const deviceId = payload.sent[0];
             const [deviceName, deviceState, assignedVm, detail] = payload.received;
-            return Object.assign({}, state, {
+            return {
+              ...state,
               [deviceId]: {
                 ...state[deviceId],
                 name: deviceName,
@@ -54,7 +56,7 @@ const usbReducer = (state = initialState, action = {}) => {
                 vm_assigned: assignedVm,
                 detail,
               },
-            });
+            };
           }
         }
       }
