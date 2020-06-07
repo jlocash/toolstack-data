@@ -6,6 +6,7 @@ import { loadVmDisk } from '../vm_disk/sagas';
 import { loadVmNic } from '../vm_nic/sagas';
 import { signals as xenmgrSignals } from '../xenmgr/constants';
 import dbusActions from '../../actions';
+import { uuidToPath } from '../../utils.js';
 
 function* loadVmNics(vmPath) {
   yield call(sendMessage, actions(vmPath).listNics());
@@ -50,22 +51,15 @@ const signalMatcher = action => {
   const { type, payload } = action;
   if (type === dbusActions.DBUS_SIGNAL_RECEIVED) {
     switch (payload.interface) {
-      case 'com.citrix.xenclient.xenmgr': {
-        switch (payload.member) {
-          case xenmgrSignals.VM_CREATED:
-          case xenmgrSignals.VM_NAME_CHANGED:
-          case xenmgrSignals.VM_STATE_CHANGED:
-          case xenmgrSignals.VM_TRANSFER_CHANGED:
-          case xenmgrSignals.VM_CONFIG_CHANGED:
-            return true;
-        }
-      }
+      case 'com.citrix.xenclient.xenmgr':
+        return true;
     }
   }
+
   return false;
 };
 
-// handle signals that the reducer cant
+// handle signals that the reducer cannot
 function* watchSignals() {
   while (true) {
     const { payload } = yield take(signalMatcher);

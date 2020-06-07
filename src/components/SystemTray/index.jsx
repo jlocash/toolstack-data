@@ -8,6 +8,7 @@ import InformationIcon from '../InformationIcon';
 // import PowerIcon from '../PowerIcon';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
+import DevicesIcon from '../DevicesIcon';
 
 const SystemTray = props => {
   const iconSize = '17px';
@@ -26,6 +27,7 @@ const SystemTray = props => {
           size={iconSize}
         />
         <InformationIcon className="system-tray-icon" size={iconSize} />
+        <DevicesIcon className="system-tray-icon" size={iconSize} />
         {
           Object.keys(ndvms).map(ndvmPath => {
             return (

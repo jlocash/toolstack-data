@@ -1,4 +1,4 @@
-import { all, call, fork, put, select, take, takeLatest } from 'redux-saga/effects';
+import { all, call, fork, put, select, take } from 'redux-saga/effects';
 import { sendMessage } from '../../sagas.js';
 import usbdaemon, { USB_DEVICE_INITIALIZED } from './actions';
 import { signals } from './constants';
@@ -20,41 +20,42 @@ function* loadDevices() {
   yield all(Object.keys(devices).map(deviceId => call(loadDevice, deviceId)));
 }
 
-export const signalMatcher = signal => {
-  return action => (
-    action.type === dbusActions.DBUS_SIGNAL_RECEIVED &&
-    action.payload.interface === 'com.citrix.xenclient.usbdaemon' &&
-    action.payload.member === signal
-  );
-};
+const signalMatcher = action => (
+  action.type === dbusActions.DBUS_SIGNAL_RECEIVED &&
+  action.payload.interface === 'com.citrix.xenclient.usbdaemon'
+);
 
-function* watchDevicesChanged() {
+function* watchSignals() {
   while (true) {
-    yield takeLatest(signalMatcher(signals.DEVICES_CHANGED), loadDevices);
-  }
-}
-
-function* watchDeviceInfoChanged() {
-  while (true) {
-    const { payload } = yield take(signalMatcher(signals.DEVICE_INFO_CHANGED));
-    const [deviceId] = payload.args;
-    yield fork(loadDevice, deviceId);
-  }
-}
-
-function* watchDeviceRejected() {
-  while (true) {
-    const [deviceName, reason] = yield take(signalMatcher(signals.DEVICE_REJECTED));
-    console.log(`usb device ${deviceName} rejected: ${reason}`);
+    const { payload } = yield take(signalMatcher);
+    switch (payload.member) {
+      case signals.DEVICE_ADDED: {
+        const [deviceId] = payload.args;
+        yield fork(loadDevice, deviceId);
+        break;
+      }
+      case signals.DEVICE_INFO_CHANGED: {
+        const [deviceId] = payload.args;
+        yield fork(loadDevice, deviceId);
+        break;
+      }
+      case signals.DEVICES_CHANGED: {
+        yield fork(loadDevices);
+        break;
+      }
+      case signals.DEVICE_REJECTED: {
+        const [deviceName, reason] = yield take(signalMatcher(signals.DEVICE_REJECTED));
+        console.log(`usb device ${deviceName} rejected: ${reason}`);
+        break;
+      }
+    }
   }
 }
 
 function* initialize() {
   yield all([
     loadDevices(),
-    watchDevicesChanged(),
-    watchDeviceInfoChanged(),
-    watchDeviceRejected(),
+    watchSignals(),
   ]);
 }
 

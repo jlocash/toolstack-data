@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import selectors from './selectors';
 
 const mapStateToProps = state => ({
-  isLoading: state.dbus.ui.initialized,
+  initialized: state.dbus.ui.initialized,
   src: selectors.getWallpaper(state),
 });
 

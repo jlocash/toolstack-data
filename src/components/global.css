@@ -60,3 +60,11 @@
   width: 20px;
   height: 20px;
 }
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
+.align-items-center {
+  align-items: center;
+}

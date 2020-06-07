@@ -97,10 +97,19 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
           case methods.LOCK:
           case methods.LOCK_TIMEOUT_GET:
           case methods.LOCK_TIMEOUT_SET:
-          case methods.SET_AUTH_ON_BOOT:
-          case methods.SET_CURRENT_KB_LAYOUT:
+          case methods.SET_AUTH_ON_BOOT: {
+            break;
+          }
+          case methods.SET_CURRENT_KB_LAYOUT: {
+            const keyboard_layout = payload.sent[0];
+            return { ...state, keyboard_layout };
+          }
           case methods.SET_DIVERT_KEYBOARD_FILTER:
-          case methods.SET_MOUSE_SPEED:
+            break;
+          case methods.SET_MOUSE_SPEED: {
+            const mouse_speed = payload.sent[0];
+            return { ...state, mouse_speed };
+          }
           case methods.SET_SLOT:
           case methods.STOP_KEYBOARD_DIVERT:
           case methods.STOP_MOUSE_DIVERT:
@@ -112,20 +121,38 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
             switch (payload.sent[0]) {
               case 'tap-to-click-enable': {
                 touchpad.tap_to_click_enable = payload.received[0];
-                return { ...state, touchpad };
+                break;
               }
               case 'scrolling-enable': {
                 touchpad.scrolling_enable = payload.received[0];
-                return { ...state, touchpad };
+                break;
               }
               case 'speed': {
                 touchpad.speed = payload.received[0];
-                return { ...state, touchpad };
+                break;
               }
             }
-            break;
+            return { ...state, touchpad };
           }
-          case methods.TOUCHPAD_SET:
+          case methods.TOUCHPAD_SET: {
+            const [prop, value] = payload.sent;
+            const { touchpad } = state;
+            switch (prop) {
+              case 'tap-to-click-enable': {
+                touchpad.tap_to_click = value;
+                break;
+              }
+              case 'scrolling-enable': {
+                touchpad.scrolling = value;
+                break;
+              }
+              case 'speed': {
+                touchpad.speed = value;
+                break;
+              }
+            }
+            return { ...state, touchpad };
+          }
           case methods.UPDATE_SEAMLESS_MOUSE_SETTINGS: {
             return state;
           }

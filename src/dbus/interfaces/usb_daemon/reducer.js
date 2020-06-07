@@ -66,16 +66,11 @@ const usbReducer = (state = initialState, action = {}) => {
       if (payload.interface === 'com.citrix.xenclient.usbdaemon') {
         switch (payload.member) {
           case signals.DEVICE_ADDED:
-          case signals.DEVICE_REJECTED:
-          case signals.OPTICAL_DEVICE_DETECTED:
-          case signals.DEVICES_CHANGED:
-          case signals.DEVICE_INFO_CHANGED: {
             return state;
-          }
         }
       }
-      break;
     }
+      break;
   }
   return state;
 };

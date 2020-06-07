@@ -35,14 +35,14 @@ const initialState = {
   },
 
   // host
-  capture_devices: [],
   cd_devices: [],
   disk_devices: [],
   gpu_devices: [],
   isos: [],
+  capture_devices: [],
   playback_devices: [],
-  sound_card_controls: [],
   sound_cards: [],
+  sound_card_controls: {},
   seconds_from_epoch: 0,
   available_wallpapers: DEFAULT_WALLPAPERS,
 
@@ -130,6 +130,17 @@ const xenmgrHostReducer = (state = initialState, action) => {
                 const [sound_cards] = payload.received;
                 return { ...state, sound_cards };
               }
+              case methods.LIST_SOUND_CARD_CONTROLS: {
+                const id = payload.sent[0];
+                const [controls] = payload.received;
+                return {
+                  ...state,
+                  sound_card_controls: {
+                    ...state.sound_card_controls,
+                    [id]: controls,
+                  },
+                };
+              }
               case methods.LIST_UI_PLUGINS: {
                 const [received] = payload.received;
                 if (payload.sent[0] === WALLPAPER_DIR) {
@@ -139,7 +150,6 @@ const xenmgrHostReducer = (state = initialState, action) => {
                 }
                 break;
               }
-              case methods.LIST_SOUND_CARD_CONTROLS:
               case methods.REBOOT:
               case methods.SET_LICENSE:
               case methods.SET_SOUND_CARD_CONTROL:
@@ -183,18 +193,30 @@ const xenmgrHostReducer = (state = initialState, action) => {
           }
           case 'org.freedesktop.DBus.Properties': {
             if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.host') {
-              if (payload.method === 'GetAll') {
-                const [received] = payload.received;
-                const properties = {};
-                Object.keys(received).forEach((key) => {
-                  properties[key.replace(/-/g, '_')] = received[key];
-                });
+              switch (payload.method) {
+                case 'GetAll': {
+                  const [received] = payload.received;
+                  const properties = {};
+                  Object.keys(received).forEach((key) => {
+                    properties[key.replace(/-/g, '_')] = received[key];
+                  });
 
-                return {
-                  ...state,
-                  ...state,
-                  properties,
-                };
+                  return {
+                    ...state,
+                    ...state,
+                    properties,
+                  };
+                }
+                case 'Set': {
+                  const [prop, value] = payload.sent.slice(-2);
+                  return {
+                    ...state,
+                    properties: {
+                      ...state.properties,
+                      [prop.replace(/-/g, '_')]: value,
+                    },
+                  };
+                }
               }
             }
           }
@@ -215,10 +237,6 @@ const xenmgrHostReducer = (state = initialState, action) => {
                 state: hostState,
               },
             };
-          }
-          case signals.STORAGE_SPACE_LOW:
-          case signals.LICENSE_CHANGED: {
-            return state;
           }
         }
       }

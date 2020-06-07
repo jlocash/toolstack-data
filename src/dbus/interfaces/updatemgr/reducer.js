@@ -72,9 +72,17 @@ const updatemgrReducer = (state = initialState, action = {}) => {
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
       if (payload.interface === 'com.citrix.xenclient.updatemgr') {
         switch (payload.member) {
-          case signals.UPDATE_STATE_CHANGE:
+          case signals.UPDATE_STATE_CHANGE: {
+            const [update_state] = payload.args;
+            return { ...state, update_state };
+          }
           case signals.UPDATE_DOWNLOAD_PROGRESS: {
-            return state;
+            const [update_download_percent, update_download_speed] = payload.args;
+            return {
+              ...state,
+              update_download_percent,
+              update_download_speed,
+            };
           }
         }
       }

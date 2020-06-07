@@ -1,4 +1,3 @@
-import './styles.css';
 import React from 'react';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
@@ -32,72 +31,72 @@ const InformationModal = ({ show, onHide, loading, properties  }) => {
             <Col>
               <Tab.Content>
                 <Tab.Pane eventKey="software">
-                  <Container fluid>
-                    <Row className="information-row">
+                  <Container>
+                    <Row className="padding-vertical-10">
                       <Col><strong>OpenXT Version</strong></Col>
                       <Col>{loading ? 'Loading' : properties.build_info.version}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>OpenXT Build</strong></Col>
                       <Col>{loading ? 'Loading' : properties.build_info.build}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>OpenXT Tools Verison</strong></Col>
                       <Col>{loading ? 'Loading' : properties.build_info.tools}</Col>
                     </Row>
                   </Container>
                 </Tab.Pane>
                 <Tab.Pane eventKey="hardware">
-                  <Container fluid>
-                    <Row className="information-row">
+                  <Container>
+                    <Row className="padding-vertical-10">
                       <Col><strong>Vendor</strong></Col>
                       <Col>{loading ? 'Loading' : properties.vendor}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Model</strong></Col>
                       <Col>{loading ? 'Loading' : properties.model}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>BIOS</strong></Col>
                       <Col>{loading ? 'Loading' : properties.bios_revision}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Total Physical Memory</strong></Col>
                       <Col>{loading ? 'Loading' : properties.total_mem}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Free Physical Memory</strong></Col>
                       <Col>{loading ? 'Loading' : properties.free_mem}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Total Disk Space</strong></Col>
                       <Col>{loading ? 'Loading' : properties.total_storage}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Free Disk Space</strong></Col>
                       <Col>{loading ? 'Loading' : properties.free_storage}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Physical CPU Model</strong></Col>
                       <Col>{loading ? 'Loading' : properties.physical_cpu_model}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Physical GPU Model</strong></Col>
                       <Col>{loading ? 'Loading' : properties.physical_gpu_model}</Col>
                     </Row>
                   </Container>
                 </Tab.Pane>
                 <Tab.Pane eventKey="networking">
-                  <Container fluid>
-                    <Row className="information-row">
+                  <Container>
+                    <Row className="padding-vertical-10">
                       <Col><strong>Wired MAC Address</strong></Col>
                       <Col>{loading ? 'Loading' : properties.eth0_mac}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Wired Model</strong></Col>
                       <Col>{loading ? 'Loading' : properties.eth0_model}</Col>
                     </Row>
-                    <Row className="information-row">
+                    <Row className="padding-vertical-10">
                       <Col><strong>Wireless Model</strong></Col>
                       <Col>{loading ? 'Loading' : properties.wireless_model}</Col>
                     </Row>
