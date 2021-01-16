@@ -1,0 +1,8 @@
+.settings-wp {
+    margin: 10px 0px 10px 0px;
+}
+
+.settings-wp-selected {
+    margin: 7px 0px 7px 0px;
+    border: 3px solid #007bff;
+}
