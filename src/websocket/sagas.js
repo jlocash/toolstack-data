@@ -1,39 +1,36 @@
-import { eventChannel } from 'redux-saga';
-import {
-  all, call, fork, put, take,
-} from 'redux-saga/effects';
-import actions from './actions';
-import dbusActions, { messageTypes } from '../dbus/actions';
+import { call, takeEvery } from 'redux-saga/effects';
+import { actionTypes, actionCreators } from './actions';
 
-const createSocketConnection = () => new Promise((resolve, reject) => {
-  try {
-    const host = process.env.REMOTE_HOST || window.location.hostname;
-    const port = process.env.REMOTE_PORT || 8080;
-    const socket = new WebSocket(`ws://${host}:${port}`);
-    socket.onopen = () => {
-      resolve(socket);
-    };
-  } catch (err) {
-    reject(err);
-  }
-});
+// createSocketConnection returns a Promise that resolves when the WebSocket has been connected
+// and rejects when an error is encountered
+const createSocketConnection = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      const host = process.env.REMOTE_HOST || window.location.hostname;
+      const port = process.env.REMOTE_PORT || 8080;
+      const socket = new WebSocket(`ws://${host}:${port}`);
+      socket.onopen = () => {
+        resolve(socket);
+      };
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 
-function* sendMessage(socket, payload) {
-  yield put({ type: actions.SOCKET_INCREMENT_OUTGOING });
-  socket.send(JSON.stringify(payload));
+function* sendMessage(socket, { data }) {
+  socket.send(data);
 }
 
 function* watchSendMessage(socket) {
-  while (true) {
-    const { payload } = yield take(actions.SOCKET_SEND_MESSAGE);
-    yield fork(sendMessage, socket, payload)
-  }
+  yield takeEvery(actionTypes.WS_MESSAGE_SEND, sendMessage, socket);
 }
 
+// createSocketChannel returns eventChannel bound to the WebSocket's onmessage event
 const createSocketChannel = (socket) => eventChannel((emit) => {
   socket.onmessage = (event) => {
-    const payload = JSON.parse(event.data);
-    emit(payload);
+    const message = JSON.parse(event.data);
+    emit(message);
   };
 
   return () => {
@@ -41,38 +38,28 @@ const createSocketChannel = (socket) => eventChannel((emit) => {
   };
 });
 
-function* watchIncomingMessages(socket) {
-  const channel = yield call(createSocketChannel, socket);
+// watchReceivedMessages is a watcher that publishes WS_MESSAGE_RECEIVED actions 
+// based on messages received from the websocket
+function* watchReceivedMessages() {
+  const receiveChannel = yield call(createSocketChannel, socket);
   while (true) {
-    const payload = yield take(channel);
-    switch (payload.type) {
-      case messageTypes.SIGNAL: {
-        yield put({ type: dbusActions.DBUS_SIGNAL_RECEIVED, payload });
-        break;
-      }
-      case messageTypes.RESPONSE: {
-        yield put({ type: dbusActions.DBUS_RESPONSE_RECEIVED, payload });
-        break;
-      }
-      case messageTypes.ERROR: {
-        yield put({ type: dbusActions.DBUS_ERROR_RECEIVED, payload });
-        break;
-      }
-    }
+    const message = yield take(receiveChannel);
+    yield put(actionCreators.receivedMessage(message));
   }
+}
+
+function* startWatchers(socket) {
+  yield call(watchSendMessage, socket);
+  yield call(watchReceivedMessages, socket);
 }
 
 export function* websocketSaga() {
   try {
     const socket = yield call(createSocketConnection);
-    yield put({ type: actions.SOCKET_CONNECTION_ESTABLISHED });
-    yield put({ type: actions.SOCKET_READY });
-    yield all([
-      call(watchSendMessage, socket),
-      call(watchIncomingMessages, socket),
-    ]);
+    yield put({ type: actions.WS_CONNECTION_READY });
+    yield call(startWatchers, socket);
   } catch (err) {
-    yield put({ type: actions.SOCKET_CONNECTION_ERROR });
+    yield put({ type: actions.WS_CONNECTION_ERROR });
     console.log(err);
   }
 }

@@ -1,61 +1,34 @@
-import { all, call, fork, put, race, take } from 'redux-saga/effects';
-import actions from './actions';
-import websocketActions from '../websocket/actions';
-import initializeDbus from './interfaces/freedesktop/sagas';
-import initializeUsbDaemon from './interfaces/usb_daemon/sagas';
-import initializeInputDaemon from './interfaces/input_daemon/sagas';
-import initializeNdvms from './interfaces/network_daemon/sagas';
-import initializeSurfman from './interfaces/surfman/sagas';
-import initializeUpdatemgr from './interfaces/updatemgr/sagas';
-import initializeXcpmd from './interfaces/xcpmd/sagas';
-import initializeXenmgr from './interfaces/xenmgr/sagas';
-import initializeXenmgrHost from './interfaces/xenmgr_host/sagas';
-import initializeXenmgrUi from './interfaces/xenmgr_ui/sagas';
-import initializeXenmgrVm from './interfaces/xenmgr_vm/sagas';
+import { actionTypes } from './actions';
+import {
+  actionTypes as wsActionTypes,
+  actionCreators as wsActionCreators,
+} from '../websocket/actions';
+import { put, race, take, fork, takeEvery } from 'redux-saga/effects';
 
-// signal
-// {
-//     "id": 16796,
-//     "type": "signal",
-//     "interface": "com.citrix.xenclient.xenmgr",
-//     "member": "vm_state_changed",
-//     "path": "/",
-//     "args": [
-//         "a6862dd4-ff2d-4dfa-8925-378ac807f26f",
-//         "/vm/a6862dd4_ff2d_4dfa_8925_378ac807f26f",
-//         "creating",
-//         0
-//     ]
-// }
-
-// response
-// {
-//     "id": 119,
-//     "type": "response",
-//     "response-to": "144",
-//     "args": [
-//         "HyperX Cloud Flight Wireless Headset",
-//         0,
-//         "",
-//         "Kingston"
-//     ]
-// }
-
+// isResponse is an action pattern that returns true if the action is of type 'response' and has a matching id
 const isResponse = (action, id) => {
   return (
-    action.type === actions.DBUS_RESPONSE_RECEIVED &&
-    action.payload['response-to'] == id
+    action.type === wsActionTypes.WS_MESSAGE_RECEIVED &&
+    action.data.type === 'response' &&
+    action.data['response-to'] == id
   );
 };
 
-const isError = (action, id) => {
-  return (
-    action.type === actions.DBUS_ERROR_RECEIVED &&
-    action.payload['response-to'] == id
-  );
-};
+// isError is an action pattern that returns true if the action is of type 'error' and has a matching id
+const isError = (action, id) => (
+  action.type === wsActionTypes.WS_MESSAGE_RECEIVED &&
+  action.data.type === 'error' &&
+  action.data['response-to'] == id
+);
 
-function* handleResponseReceived(message) {
+// isSignal is an action pattern that returns true if the action is of type 'error'
+const isSignal = action => (
+  action.type === wsActionTypes.WS_MESSAGE_RECEIVED &&
+  action.data.type === 'signal'
+);
+
+// handleResponse takes the action matching isResponse and puts
+function* handleResponse(message) {
   const { payload } = yield take(action => isResponse(action, message.id));
   yield put({
     type: actions.DBUS_MESSAGE_COMPLETED,
@@ -70,47 +43,60 @@ function* handleResponseReceived(message) {
   });
 }
 
-function* handleErrorReceived(message) {
+// handleError takes a first response
+function* handleError(message) {
   const { payload } = yield take(action => isError(action, message.id));
   console.log('error: ', payload);
   console.log('message: ', message);
 }
 
-export function* sendMessage({ payload }) {
-  yield put(websocketActions.sendMessage(payload));
+// handleSignal takes the data received from the matching WebSocket message and dispatches it as a DBUS_SIGNAL_RECEIVED action
+function* handleSignal({ data }) {
+  yield put({ type: actionTypes.DBUS_SIGNAL_RECEIVED, data });
+}
+
+// sendMessage dispatches an action to the websocket saga instructing it to send the message
+// A race then begins between the error and response handlers.
+function* sendMessage(message) {
+  yield put(wsActionCreators.sendMessage(message));
   yield race([
-    call(handleResponseReceived, payload),
-    call(handleErrorReceived, payload),
+    call(handleResponse, message),
+    call(handleError, message),
   ]);
 }
 
+// watchSendMessage receives DBUS_SEND_MESSAGE actions and forks them off in sendMessage.
 function* watchSendMessage() {
+  let id = 1;
   while (true) {
-    const message = yield take(actions.DBUS_SEND_MESSAGE);
-    yield fork(sendMessage, message);
+    const { data } = yield take(actionTypes.DBUS_SEND_MESSAGE);
+    yield fork(sendMessage, {
+      id,
+      destination: data.destination,
+      interface: data.interface,
+      path: data.path,
+      method: data.method,
+      args: data.args,
+    });
   }
 }
 
-function* initialize() {
-  yield initializeDbus();
+function* watchSignals() {
+  while (true) {
+    const { data } = yield take(action => isSignal(action));
+    yield fork(handleSignal);
+  }
+}
+
+function* startWatchers() {
   yield all([
-    initializeXenmgr(),
-    initializeXenmgrHost(),
-    initializeXenmgrUi(),
-    initializeXenmgrVm(),
-    initializeNdvms(),
-    initializeUsbDaemon(),
-    initializeInputDaemon(),
-    initializeXcpmd(),
-    initializeSurfman(),
-    initializeUpdatemgr(),
-  ]);
+    watchSendMessage(),
+    watchSignals(),
+  ])
 }
 
 export function* dbusSaga() {
-  yield take(websocketActions.SOCKET_READY);
-  yield all([
-    watchSendMessage(),
-    initialize(),
-  ]);
+  yield take(wsActionTypes.WS_CONNECTION_READY);
+  yield startWatchers();
+  yield initializeServices();
 }
