@@ -1,7 +1,8 @@
 import dbusActions from '../../actions';
-import { SET_VM_INITIALIZED } from './actions';
-import { methods } from './constants';
+import { types } from './actions';
+import methods from './constants';
 import { methods as xenmgrMethods, signals as xenmgrSignals } from '../xenmgr/constants';
+import { interfaces, services } from '../../constants';
 
 const initialVmState = {
   properties: {
@@ -160,10 +161,9 @@ const initialVmState = {
 const initialState = {};
 
 const xenmgrVmReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case SET_VM_INITIALIZED: {
-      const { vmPath, initialized } = payload;
+  switch (action.type) {
+    case types.SET_VM_INITIALIZED: {
+      const { vmPath, initialized } = action.data;
       return {
         ...state,
         [vmPath]: {
@@ -174,12 +174,13 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.xenmgr.vm': {
-            const vmPath = payload.path;
-            switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XENMGR) {
+        switch (sent.interface) {
+          case interfaces.VM: {
+            const vmPath = sent.path;
+            switch (sent.method) {
               // vm
               case methods.ADD_ARGO_FIREWALL_RULE:
               case methods.ADD_DISK:
@@ -196,17 +197,17 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
                 break;
               }
               case methods.LIST_ARGO_FIREWALL_RULES: {
-                const [argo_firewall_rules] = payload.received;
+                const [rules] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    argo_firewall_rules,
+                    argo_firewall_rules: rules,
                   },
                 };
               }
               case methods.LIST_DISKS: {
-                const [disks] = payload.received;
+                const [disks] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
@@ -216,17 +217,17 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
                 };
               }
               case methods.LIST_NET_FIREWALL_RULES: {
-                const [net_firewall_rules] = payload.received;
+                const [rules] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    net_firewall_rules,
+                    net_firewall_rules: rules,
                   },
                 };
               }
               case methods.LIST_NICS: {
-                const [nics] = payload.received;
+                const [nics] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
@@ -265,22 +266,22 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
               case methods.DELETE_PT_RULE_BDF:
                 break;
               case methods.LIST_PT_PCI_DEVICES: {
-                const [pt_pci_devices] = payload.received;
+                const [ptPciDevices] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    pt_pci_devices,
+                    pt_pci_devices: ptPciDevices,
                   },
                 };
               }
               case methods.LIST_PT_RULES: {
-                const [pt_rules] = payload.received;
+                const [ptRules] = received.args;
                 return {
                   ...state,
                   [vmPath]: {
                     ...state[vmPath],
-                    pt_rules,
+                    pt_rules: ptRules,
                   },
                 };
               }
@@ -295,12 +296,12 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
             }
             break;
           }
-          case 'com.citrix.xenclient.xenmgr': {
-            switch (payload.method) {
+          case interfaces.XENMGR: {
+            switch (sent.method) {
               case xenmgrMethods.LIST_VMS: {
                 const vms = {};
-                const [received] = payload.received;
-                received.forEach((vmPath) => {
+                const [paths] = received.args;
+                paths.forEach((vmPath) => {
                   if (!state[vmPath]) {
                     vms[vmPath] = { ...initialVmState };
                   }
@@ -310,15 +311,15 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
             }
             break;
           }
-          case 'org.freedesktop.DBus.Properties': {
-            switch (payload.sent[0]) {
-              case 'com.citrix.xenclient.xenmgr.vm': {
-                if (payload.method === 'GetAll') {
-                  const vmPath = payload.path;
-                  const [received] = payload.received;
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            switch (sent.args[0]) {
+              case interfaces.VM: {
+                if (sent.method === 'GetAll') {
+                  const vmPath = sent.path;
+                  const [newProperties] = received.args;
                   const properties = { ...state[vmPath].properties };
-                  Object.keys(received).forEach((key) => {
-                    properties[key.replace(/-/g, '_')] = received[key];
+                  Object.keys(newProperties).forEach((key) => {
+                    properties[key.replace(/-/g, '_')] = newProperties[key];
                   });
                   return {
                     ...state,
@@ -337,10 +338,11 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      if (payload.interface === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.member) {
+      const signal = action.data;
+      if (signal.interface === 'com.citrix.xenclient.xenmgr') {
+        switch (signal.member) {
           case xenmgrSignals.VM_STATE_CHANGED: {
-            const [, vmPath, vmState, acpiState] = payload.args;
+            const [, vmPath, vmState, acpiState] = signal.args;
             return {
               ...state,
               [vmPath]: {
@@ -355,14 +357,14 @@ const xenmgrVmReducer = (state = initialState, action = {}) => {
           }
           case xenmgrSignals.VM_CREATED: {
             // usually followed by a xenmgrSignals.VM_CONFIG_CHANGED
-            const [, vmPath] = payload.args;
+            const [, vmPath] = signal.args;
             return {
               ...state,
               [vmPath]: { ...initialVmState },
             };
           }
           case xenmgrSignals.VM_DELETED: {
-            const [, vmPath] = payload.args;
+            const [, vmPath] = signal.args;
             const newState = { ...state };
             delete newState[vmPath];
             return newState;

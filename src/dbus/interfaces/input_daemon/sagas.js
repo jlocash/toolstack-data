@@ -1,5 +1,5 @@
 import { all, call, put } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
+import sendMessage from '../../sendMessage';
 import actions, { INPUT_DAEMON_INITIALIZED } from './actions';
 
 function* loadTouchpad() {

@@ -1,18 +1,33 @@
 import dbusActions from '../../actions';
+import { interfaces, services } from '../../constants';
 
-export const XENMGR_UI_INITIALIZED = 'XENMGR_UI_INITIALIZED';
-
-const service = 'com.citrix.xenclient.xenmgr';
-const iface = service;
-const configIface = `${iface}.config.ui`;
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
-const path = '/';
-
-const actions = {
-  // properties
-  getProperty: (name) => dbusActions.sendMessage(service, path, freedesktopIface, 'Get', configIface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, path, freedesktopIface, 'GetAll', configIface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, path, freedesktopIface, 'Set', configIface, name, value),
+export const types = {
+  XENMGR_UI_INITIALIZED: 'XENMGR_UI_INITIALIZED',
 };
 
-export default actions;
+const path = '/';
+
+export default {
+  // properties
+  getProperty: (name) => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Get',
+    interfaces.UI_CONFIG, name,
+  ),
+  getAllProperties: () => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'GetAll',
+    interfaces.UI_CONFIG,
+  ),
+  setProperty: (name, value) => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Set',
+    interfaces.UI_CONFIG, name, value,
+  ),
+};

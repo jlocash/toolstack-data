@@ -1,4 +1,3 @@
-
 export const signals = {
   // xenmgr
   VM_CONFIG_CHANGED: 'vm_config_changed',

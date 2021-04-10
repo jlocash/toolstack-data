@@ -1,3 +1,3 @@
-export const methods = {
+export default {
   DELETE: 'delete',
 };

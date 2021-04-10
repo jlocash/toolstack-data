@@ -1,4 +1,4 @@
-export const methods = {
+export default {
   ADD_RULE: 'add_rule',
   ADD_VAR: 'add_var',
   AGGREGATE_BATTERY_PERCENTAGE: 'aggregate_battery_percentage',

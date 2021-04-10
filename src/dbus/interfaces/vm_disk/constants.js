@@ -1,5 +1,4 @@
-
-export const methods = {
+export default {
   ATTACH_PHYSICAL: 'attach_physical',
   ATTACH_VHD: 'attach_vhd',
   DELETE: 'delete',

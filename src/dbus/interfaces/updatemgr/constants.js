@@ -1,4 +1,3 @@
-
 export const methods = {
   APPLY_UPDATE_AND_REBOOT: 'apply_update_and_reboot',
   APPLY_UPDATE_AND_SHUTDOWN: 'apply_update_and_shutdown',

@@ -1,4 +1,3 @@
-
 export const signals = {
   NETWORKDAEMON_UP: 'networkdaemon_up',
   NETWORK_ADDED: 'network_added',

@@ -1,10 +1,12 @@
-import { all, call, delay, fork, put, select, take } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
-import actions, { XENMGR_HOST_INITIALIZED } from './actions';
+import {
+  all, call, delay, fork, put, select, take,
+} from 'redux-saga/effects';
+import sendMessage from '../../sendMessage';
+import actions, { types } from './actions';
 import dbusActions from '../../actions';
 import { signals as usbSignals } from '../usb_daemon/constants';
 import { signals as xenmgrSignals } from '../xenmgr/constants';
-import { WALLPAPER_DIR } from './constants.js';
+import { WALLPAPER_DIR } from './constants';
 
 function* updateTime() {
   while (true) {
@@ -15,8 +17,8 @@ function* updateTime() {
 
 function* loadSoundCards() {
   yield call(sendMessage, actions.listSoundCards());
-  const soundCards = yield select(state => state.dbus.host.sound_cards);
-  yield all(soundCards.map(card => call(sendMessage, actions.listSoundCardControls(card.id))));
+  const soundCards = yield select((state) => state.dbus.host.sound_cards);
+  yield all(soundCards.map((card) => call(sendMessage, actions.listSoundCardControls(card.id))));
 }
 
 function* loadAudio() {
@@ -27,10 +29,10 @@ function* loadAudio() {
   ]);
 }
 
-const signalMatcher = action => {
-  const { type, payload } = action;
+const signalMatcher = (action) => {
+  const { type, data } = action;
   if (type === dbusActions.DBUS_SIGNAL_RECEIVED) {
-    switch (payload.interface) {
+    switch (data.interface) {
       case 'com.citrix.xenclient.xenmgr.host':
       case 'com.citrix.xenclient.usbdaemon':
         return true;
@@ -39,11 +41,10 @@ const signalMatcher = action => {
   return false;
 };
 
-// handle signals that the reducer cannot
 function* watchSignals() {
   while (true) {
-    const { payload } = yield take(signalMatcher);
-    switch (payload.member) {
+    const { data } = yield take(signalMatcher);
+    switch (data.member) {
       case usbSignals.OPTICAL_DEVICE_DETECTED: {
         yield fork(sendMessage, actions.listCdDevices());
         break;
@@ -74,7 +75,7 @@ function* initialize() {
     fork(watchSignals),
   ]);
 
-  yield put({ type: XENMGR_HOST_INITIALIZED });
+  yield put({ type: types.XENMGR_HOST_INITIALIZED });
 }
 
 export default initialize;

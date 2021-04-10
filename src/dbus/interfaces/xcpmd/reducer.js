@@ -1,14 +1,14 @@
 import dbusActions from '../../actions';
-import { BATTERY_INITIALIZED } from './actions';
-import { methods } from './constants';
+import { interfaces, services } from '../../constants';
+import { types } from './actions';
+import methods from './constants';
 
 const initialState = {};
 
 const xcpmdReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case BATTERY_INITIALIZED: {
-      const { batteryId } = payload;
+  switch (action.type) {
+    case types.BATTERY_INITIALIZED: {
+      const { batteryId } = action.data;
       return {
         ...state,
         [batteryId]: {
@@ -19,14 +19,15 @@ const xcpmdReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xcpmd') {
-        if (payload.interface === 'com.citrix.xenclient.xcpmd') {
-          switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XCPMD) {
+        if (sent.interface === interfaces.XCPMD) {
+          switch (sent.method) {
             case methods.BATTERIES_PRESENT: {
-              const [received] = payload.received;
+              const [ids] = received.args;
               const batteries = {};
-              received.forEach(id => {
+              ids.forEach((id) => {
                 batteries[id] = {
                   meta: {
                     initialized: false,

@@ -1,25 +1,43 @@
 import dbusActions from '../../actions';
 import { methods } from './constants';
+import { services, interfaces } from '../../constants';
 
-export const NDVM_INITIALIZED = 'NDVM_INITIALIZED';
-export const NETWORK_DAEMON_INITIALIZED = 'NETWORK_DAEMON_INITIALIZED';
+export const types = {
+  NDVM_INITIALIZED: 'NDVM_INITIALIZED',
+  NETWORK_DAEMON_INITIALIZED: 'NETWORK_DAEMON_INITIALIZED',
+};
 
-const service = 'com.citrix.xenclient.networkdaemon';
-const iface = service;
 const path = '/';
 
+const networkDaemon = (method, ...args) => dbusActions.sendMessage(
+  services.NETWORK_DAEMON,
+  path,
+  interfaces.NETWORK_DAEMON,
+  method,
+  ...args,
+);
+
 const actions = {
-  addVif: (domId, backendDomId, mac) => dbusActions.sendMessage(service, path, iface, methods.ADD_VIF, parseInt(domId), parseInt(backendDomId), mac),
-  createNetwork: (networkType, id, config) => dbusActions.sendMessage(service, path, iface, methods.CREATE_NETWORK, networkType, parseInt(id), config),
-  getNetworkBackend: (network) => dbusActions.sendMessage(service, path, iface, methods.GET_NETWORK_BACKEND, network),
-  isInitialized: () => dbusActions.sendMessage(service, path, iface, methods.IS_INITIALIZED),
-  isNetworkingActive: () => dbusActions.sendMessage(service, path, iface, methods.IS_NETWORKING_ACTIVE),
-  list: () => dbusActions.sendMessage(service, path, iface, methods.LIST),
-  listBackends: () => dbusActions.sendMessage(service, path, iface, methods.LIST_BACKENDS),
-  moveToNetwork: (vif, network) => dbusActions.sendMessage(service, path, iface, methods.MOVE_TO_NETWORK, vif, network),
-  ndvmStatus: (uuid, domId, status) => dbusActions.sendMessage(service, path, iface, methods.NDVM_STATUS, uuid, parseInt(domId), status),
-  shutdown: () => dbusActions.sendMessage(service, path, iface, methods.SHUTDOWN),
-  vifConnected: (vif, domId) => dbusActions.sendMessage(service, path, iface, methods.VIF_CONNECTED, vif, parseInt(domId)),
+  addVif: (domId, backendDomId, mac) => networkDaemon(
+    methods.ADD_VIF,
+    parseInt(domId, 10), parseInt(backendDomId, 10), mac,
+  ),
+  createNetwork: (networkType, id, config) => networkDaemon(
+    methods.CREATE_NETWORK,
+    networkType, parseInt(id, 10), config,
+  ),
+  getNetworkBackend: (network) => networkDaemon(methods.GET_NETWORK_BACKEND, network),
+  isInitialized: () => networkDaemon(methods.IS_INITIALIZED),
+  isNetworkingActive: () => networkDaemon(methods.IS_NETWORKING_ACTIVE),
+  list: () => networkDaemon(methods.LIST),
+  listBackends: () => networkDaemon(methods.LIST_BACKENDS),
+  moveToNetwork: (vif, network) => networkDaemon(methods.MOVE_TO_NETWORK, vif, network),
+  ndvmStatus: (uuid, domId, status) => networkDaemon(
+    methods.NDVM_STATUS,
+    uuid, parseInt(domId, 10), status,
+  ),
+  shutdown: () => networkDaemon(methods.SHUTDOWN),
+  vifConnected: (vif, domId) => networkDaemon(methods.VIF_CONNECTED, vif, parseInt(domId, 10)),
 };
 
 export default actions;

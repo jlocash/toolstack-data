@@ -1,5 +1,6 @@
 import dbusActions from '../../actions';
-import { XENMGR_UI_INITIALIZED } from './actions';
+import { interfaces, services } from '../../constants';
+import { types } from './actions';
 
 const initialState = {
   properties: {
@@ -34,9 +35,8 @@ const initialState = {
 };
 
 const xenmgrUiReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case XENMGR_UI_INITIALIZED: {
+  switch (action.type) {
+    case types.XENMGR_UI_INITIALIZED: {
       return {
         ...state,
         meta: {
@@ -44,17 +44,18 @@ const xenmgrUiReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.interface) {
-          case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.config.ui') {
-              switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XENMGR) {
+        switch (sent.interface) {
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            if (sent.args[0] === interfaces.UI_CONFIG) {
+              switch (sent.method) {
                 case 'GetAll': {
-                  const [received] = payload.received;
+                  const [newProperties] = received.args;
                   const properties = { ...state.properties };
-                  Object.keys(received).forEach((key) => {
-                    properties[key.replace(/-/g, '_')] = received[key];
+                  Object.keys(newProperties).forEach((key) => {
+                    properties[key.replace(/-/g, '_')] = newProperties[key];
                   });
 
                   return {
@@ -63,7 +64,7 @@ const xenmgrUiReducer = (state = initialState, action = {}) => {
                   };
                 }
                 case 'Set': {
-                  const [prop, value] = payload.sent.slice(-2);
+                  const [prop, value] = sent.args.slice(-2);
                   return {
                     ...state,
                     properties: {

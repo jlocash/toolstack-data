@@ -1,5 +1,6 @@
 import dbusActions from '../../actions';
-import { XENMGR_INITIALIZED } from './actions';
+import { interfaces, services } from '../../constants';
+import { types } from './actions';
 import { methods, signals } from './constants';
 
 const initialState = {
@@ -36,9 +37,8 @@ const initialState = {
 };
 
 const xenmgrReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case XENMGR_INITIALIZED: {
+  switch (action.type) {
+    case types.XENMGR_INITIALIZED: {
       return {
         ...state,
         meta: {
@@ -46,13 +46,14 @@ const xenmgrReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.xenmgr':
-          case 'com.citrix.xenclient.xenmgr.diag':
-          case 'com.citrix.xenclient.xenmgr.guestreq': {
-            switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XENMGR) {
+        switch (sent.interface) {
+          case interfaces.XENMGR:
+          case interfaces.DIAG:
+          case interfaces.GUESTREQ: {
+            switch (sent.method) {
               // xenmgr
               case methods.CREATE_VHD:
               case methods.CREATE_VM:
@@ -97,19 +98,14 @@ const xenmgrReducer = (state = initialState, action = {}) => {
             break;
           }
           case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.config') {
-              if (payload.method === 'GetAll') {
-                const [received] = payload.received;
+            if (sent.args[0] === 'com.citrix.xenclient.xenmgr.config') {
+              if (sent.method === 'GetAll') {
+                const [newProperties] = received.args;
                 const properties = { ...state.properties };
-                Object.keys(received).forEach((key) => {
-                  properties[key.replace(/-/g, '_')] = received[key];
+                Object.keys(newProperties).forEach((key) => {
+                  properties[key.replace(/-/g, '_')] = newProperties[key];
                 });
-
-                return {
-                  ...state,
-                  ...state,
-                  properties,
-                };
+                return { ...state, properties };
               }
             }
             break;
@@ -119,9 +115,10 @@ const xenmgrReducer = (state = initialState, action = {}) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      switch (payload.interface) {
-        case 'com.citrix.xenclient.xenmgr': {
-          switch (payload.member) {
+      const signal = action.data;
+      switch (signal.interface) {
+        case interfaces.XENMGR: {
+          switch (signal.member) {
             case signals.VM_CONFIG_CHANGED:
             case signals.NOTIFY:
             case signals.VM_STATE_CHANGED:
@@ -138,8 +135,8 @@ const xenmgrReducer = (state = initialState, action = {}) => {
           }
           break;
         }
-        case 'com.citrix.xenclient.xenmgr.diag': {
-          switch (payload.member) {
+        case interfaces.DIAG: {
+          switch (signal.member) {
             case signals.CREATE_STATUS_REPORT:
             case signals.GATHER:
             case signals.SAVE:
@@ -152,8 +149,8 @@ const xenmgrReducer = (state = initialState, action = {}) => {
           }
           break;
         }
-        case 'com.citrix.xenclient.xenmgr.guestreq': {
-          switch (payload.member) {
+        case interfaces.GUESTREQ: {
+          switch (signal.member) {
             case signals.REQUEST_ATTENTION: {
               return state;
             }

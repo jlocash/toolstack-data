@@ -1,7 +1,7 @@
-
 import dbusActions from '../../actions';
-import { methods as vmMethods } from '../xenmgr_vm/constants';
-import { VM_NIC_INITIALIZED } from './actions';
+import { interfaces, services } from '../../constants';
+import vmMethods from '../xenmgr_vm/constants';
+import { types } from './actions';
 
 const initialVmNicState = {
   properties: {},
@@ -13,10 +13,9 @@ const initialVmNicState = {
 const initialState = {};
 
 const vmNicReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case VM_NIC_INITIALIZED: {
-      const { nicPath } = payload;
+  switch (action.type) {
+    case types.VM_NIC_INITIALIZED: {
+      const { nicPath } = action.data;
       return {
         ...state,
         [nicPath]: {
@@ -27,14 +26,15 @@ const vmNicReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.xenmgr.vm': {
-            if (payload.method === vmMethods.LIST_NICS) {
-              const [received] = payload.received;
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XENMGR) {
+        switch (sent.interface) {
+          case interfaces.VM: {
+            if (sent.method === vmMethods.LIST_NICS) {
+              const [nicPaths] = received.args;
               const nics = {};
-              received.forEach(nicPath => {
+              nicPaths.forEach((nicPath) => {
                 if (!state[nicPath]) {
                   nics[nicPath] = { ...initialVmNicState };
                 }
@@ -43,14 +43,14 @@ const vmNicReducer = (state = initialState, action = {}) => {
             }
             break;
           }
-          case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.vmnic') {
-              if (payload.method === 'GetAll') {
-                const nicPath = payload.path;
-                const [received] = payload.received;
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            if (sent.args[0] === interfaces.VM_NIC) {
+              if (sent.method === 'GetAll') {
+                const nicPath = sent.path;
+                const [newProperties] = received.args;
                 const properties = {};
-                Object.keys(received).forEach(key => {
-                  properties[key.replace(/-/g, '_')] = received[key];
+                Object.keys(newProperties).forEach((key) => {
+                  properties[key.replace(/-/g, '_')] = newProperties[key];
                 });
                 return {
                   ...state,

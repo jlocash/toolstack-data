@@ -1,6 +1,7 @@
 import dbusActions from '../../actions';
 import { methods, signals } from './constants';
 import { UPDATEMGR_INITIALIZED } from './actions';
+import { interfaces, services } from '../../constants';
 
 const initialState = {
   properties: {
@@ -20,8 +21,7 @@ const initialState = {
 };
 
 const updatemgrReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
+  switch (action.type) {
     case UPDATEMGR_INITIALIZED: {
       return {
         ...state,
@@ -30,11 +30,12 @@ const updatemgrReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.updatemgr') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.updatemgr': {
-            switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.UPDATEMGR) {
+        switch (sent.interface) {
+          case interfaces.UPDATEMGR: {
+            switch (sent.method) {
               case methods.APPLY_UPDATE_AND_REBOOT:
               case methods.APPLY_UPDATE_AND_SHUTDOWN:
               case methods.CANCEL_UPDATE:
@@ -47,19 +48,18 @@ const updatemgrReducer = (state = initialState, action = {}) => {
             }
             break;
           }
-          case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.updatemgr') {
-              if (payload.method === 'GetAll') {
-                const [received] = payload.received;
-                const newProperties = { ...state.properties };
-                Object.keys(received).forEach((key) => {
-                  newProperties[key.replace(/-/g, '_')] = received[key];
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            if (sent.args[0] === interfaces.UPDATEMGR) {
+              if (sent.method === 'GetAll') {
+                const [newProperties] = received.args;
+                const properties = {};
+                Object.keys(newProperties).forEach((key) => {
+                  properties[key.replace(/-/g, '_')] = newProperties[key];
                 });
 
                 return {
                   ...state,
-                  ...state,
-                  properties: newProperties,
+                  properties,
                 };
               }
             }
@@ -70,18 +70,19 @@ const updatemgrReducer = (state = initialState, action = {}) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      if (payload.interface === 'com.citrix.xenclient.updatemgr') {
-        switch (payload.member) {
+      const signal = action.data;
+      if (signal.interface === interfaces.UPDATEMGR) {
+        switch (signal.member) {
           case signals.UPDATE_STATE_CHANGE: {
-            const [update_state] = payload.args;
-            return { ...state, update_state };
+            const [updateState] = signal.args;
+            return { ...state, update_state: updateState };
           }
           case signals.UPDATE_DOWNLOAD_PROGRESS: {
-            const [update_download_percent, update_download_speed] = payload.args;
+            const [percent, speed] = signal.args;
             return {
               ...state,
-              update_download_percent,
-              update_download_speed,
+              update_download_percent: percent,
+              update_download_speed: speed,
             };
           }
         }

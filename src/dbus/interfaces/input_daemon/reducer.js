@@ -1,6 +1,7 @@
 import dbusActions from '../../actions';
 import { methods, signals } from './constants';
 import { INPUT_DAEMON_INITIALIZED } from './actions';
+import { services, interfaces } from '../../constants';
 
 const initialState = {
   // properties
@@ -24,8 +25,7 @@ const initialState = {
 };
 
 const inputDaemonReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
+  switch (action.type) {
     case INPUT_DAEMON_INITIALIZED: {
       return {
         ...state,
@@ -34,25 +34,26 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.input') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.input': {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.INPUT) {
+        switch (sent.interface) {
+          case interfaces.INPUT: {
             break;
           }
-          case 'org.freedesktop.DBus.Properties': {
-            if (payload.method === 'GetAll') {
-              const [received] = payload.received;
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            if (sent.method === 'GetAll') {
+              const [newProperties] = received.args;
               const properties = {};
-              Object.keys(received).forEach((key) => {
-                properties[key.replace(/-/g, '_')] = received[key];
+              Object.keys(newProperties).forEach((key) => {
+                properties[key.replace(/-/g, '_')] = newProperties[key];
               });
               return { ...state, properties };
             }
             break;
           }
         }
-        switch (payload.method) {
+        switch (sent.method) {
           case methods.ATTACH_VKBD:
           case methods.AUTH_BEGIN:
           case methods.AUTH_CLEAR_STATUS:
@@ -73,23 +74,23 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
           case methods.GET_AUTH_ON_BOOT:
             break;
           case methods.GET_CURRENT_KB_LAYOUT: {
-            const [keyboard_layout] = payload.received;
-            return { ...state, keyboard_layout };
+            const [keyboardLayout] = received.args;
+            return { ...state, keyboard_layout: keyboardLayout };
           }
           case methods.GET_FOCUS_DOMID:
           case methods.GET_IDLE_TIME: {
             break;
           }
           case methods.GET_KB_LAYOUTS: {
-            const [keyboard_layouts] = payload.received;
-            return { ...state, keyboard_layouts };
+            const [keyboardLayouts] = received.args;
+            return { ...state, keyboard_layouts: keyboardLayouts };
           }
           case methods.GET_LAST_INPUT_TIME:
           case methods.GET_LID_STATE:
             break;
           case methods.GET_MOUSE_SPEED: {
-            const [mouse_speed] = payload.received;
-            return { ...state, mouse_speed };
+            const [mouseSpeed] = received.args;
+            return { ...state, mouse_speed: mouseSpeed };
           }
           case methods.GET_PLATFORM_USER:
           case methods.GET_REMOTE_USER_HASH:
@@ -101,14 +102,14 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
             break;
           }
           case methods.SET_CURRENT_KB_LAYOUT: {
-            const keyboard_layout = payload.sent[0];
-            return { ...state, keyboard_layout };
+            const [keyboardLayout] = sent.args;
+            return { ...state, keyboard_layout: keyboardLayout };
           }
           case methods.SET_DIVERT_KEYBOARD_FILTER:
             break;
           case methods.SET_MOUSE_SPEED: {
-            const mouse_speed = payload.sent[0];
-            return { ...state, mouse_speed };
+            const [mouseSpeed] = sent.args;
+            return { ...state, mouseSpeed };
           }
           case methods.SET_SLOT:
           case methods.STOP_KEYBOARD_DIVERT:
@@ -118,24 +119,24 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
             break;
           case methods.TOUCHPAD_GET: {
             const touchpad = { ...state.touchpad };
-            switch (payload.sent[0]) {
+            switch (sent.args[0]) {
               case 'tap-to-click-enable': {
-                touchpad.tap_to_click_enable = payload.received[0];
+                [touchpad.tap_to_click_enable] = received.args;
                 break;
               }
               case 'scrolling-enable': {
-                touchpad.scrolling_enable = payload.received[0];
+                [touchpad.scrolling_enable] = received.args;
                 break;
               }
               case 'speed': {
-                touchpad.speed = payload.received[0];
+                [touchpad.speed] = received.args;
                 break;
               }
             }
             return { ...state, touchpad };
           }
           case methods.TOUCHPAD_SET: {
-            const [prop, value] = payload.sent;
+            const [prop, value] = sent.args;
             const { touchpad } = state;
             switch (prop) {
               case 'tap-to-click-enable': {
@@ -161,8 +162,9 @@ const inputDaemonReducer = (state = initialState, action = {}) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      if (payload.interface === 'com.citrix.xenclient.input') {
-        switch (payload.member) {
+      const signal = action.data;
+      if (signal.interface === interfaces.INPUT) {
+        switch (signal.member) {
           case signals.KEYBOARD_FOCUS_CHANGE:
           case signals.FOCUS_AUTH_FIELD:
           case signals.SYNC_AUTH_USERNAME:

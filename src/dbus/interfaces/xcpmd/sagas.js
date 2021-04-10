@@ -1,5 +1,5 @@
 import { call } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
+import sendMessage from '../../sendMessage';
 import actions from './actions';
 
 function* initialize() {

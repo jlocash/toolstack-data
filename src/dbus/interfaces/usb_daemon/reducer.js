@@ -1,14 +1,14 @@
 import dbusActions from '../../actions';
-import { USB_DEVICE_INITIALIZED } from './actions';
+import { interfaces, services } from '../../constants';
+import { types } from './actions';
 import { methods, signals } from './constants';
 
 const initialState = {};
 
 const usbReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
-    case USB_DEVICE_INITIALIZED: {
-      const { deviceId } = payload;
+  switch (action.type) {
+    case types.USB_DEVICE_INITIALIZED: {
+      const { deviceId } = action.data;
       return {
         ...state,
         [deviceId]: {
@@ -19,17 +19,18 @@ const usbReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.usbdaemon') {
-        switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.USB_DAEMON) {
+        switch (sent.method) {
           case methods.GET_POLICY_DOMUUID:
           case methods.STATE: {
             return state;
           }
           case methods.LIST_DEVICES: {
-            const [received] = payload.received;
+            const [deviceIds] = received.args;
             const devices = {};
-            received.forEach(deviceId => {
+            deviceIds.forEach((deviceId) => {
               if (!state[deviceId]) {
                 devices[deviceId] = {
                   name: '',
@@ -45,8 +46,8 @@ const usbReducer = (state = initialState, action = {}) => {
             return { ...state, ...devices };
           }
           case methods.GET_DEVICE_INFO: {
-            const deviceId = payload.sent[0];
-            const [deviceName, deviceState, assignedVm, detail] = payload.received;
+            const [deviceId] = sent.args;
+            const [deviceName, deviceState, assignedVm, detail] = received.args;
             return {
               ...state,
               [deviceId]: {
@@ -63,8 +64,9 @@ const usbReducer = (state = initialState, action = {}) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      if (payload.interface === 'com.citrix.xenclient.usbdaemon') {
-        switch (payload.member) {
+      const signal = action.data;
+      if (signal.interface === interfaces.USB_DAEMON) {
+        switch (signal.member) {
           case signals.DEVICE_ADDED:
             return state;
         }

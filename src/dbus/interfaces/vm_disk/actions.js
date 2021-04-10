@@ -1,23 +1,50 @@
 import dbusActions from '../../actions';
-import { methods } from './constants';
+import { interfaces, services } from '../../constants';
+import methods from './constants';
 
-export const VM_DISK_INITIALIZED = 'VM_DISK_INITIALIZED';
+export const types = {
+  VM_DISK_INITIALIZED: 'VM_DISK_INITIALIZED',
+};
 
-const service = 'com.citrix.xenclient.xenmgr';
-const iface = 'com.citrix.xenclient.vmdisk';
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
+const vmDisk = (diskPath, method, ...args) => dbusActions.sendMessage(
+  services.XENMGR,
+  diskPath,
+  interfaces.VM_DISK,
+  method,
+  ...args,
+);
 
-const actions = (diskPath) => ({
-  getProperty: (name) => dbusActions.sendMessage(service, diskPath, freedesktopIface, 'Get', iface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, diskPath, freedesktopIface, 'GetAll', iface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, diskPath, freedesktopIface, 'Set', iface, name, value),
-  attachPhysical: (physPath) => dbusActions.sendMessage(service, diskPath, iface, methods.ATTACH_PHYSICAL, physPath),
-  attachVhd: (vhdPath) => dbusActions.sendMessage(service, diskPath, iface, methods.ATTACH_VHD, vhdPath),
-  delete: () => dbusActions.sendMessage(service, diskPath, iface, methods.DELETE),
-  generateCryptoKey: (keySize) => dbusActions.sendMessage(service, diskPath, iface, methods.GENERATE_CRYPTO_KEY, keySize),
-  generateCryptoKeyIn: (keySize, dirPath) => dbusActions.sendMessage(service, diskPath, iface, methods.GENERATE_CRYPTO_KEY_IN, parseInt(keySize), dirPath),
-  mount: (dirPath, readOnly) => dbusActions.sendMessage(service, diskPath, iface, methods.MOUNT, dirPath, readOnly),
-  umount: () => dbusActions.sendMessage(service, diskPath, iface, methods.UMOUNT),
+export default (diskPath) => ({
+  getProperty: (name) => dbusActions.sendMessage(
+    services.XENMGR,
+    diskPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Get',
+    interfaces.VM_DISK, name,
+  ),
+  getAllProperties: () => dbusActions.sendMessage(
+    services.XENMGR,
+    diskPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'GetAll',
+    interfaces.VM_DISK,
+  ),
+  setProperty: (name, value) => dbusActions.sendMessage(
+    services.XENMGR,
+    diskPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Set',
+    interfaces.VM_DISK, name, value,
+  ),
+  attachPhysical: (physPath) => vmDisk(diskPath, methods.ATTACH_PHYSICAL, physPath),
+  attachVhd: (vhdPath) => vmDisk(diskPath, methods.ATTACH_VHD, vhdPath),
+  delete: () => vmDisk(diskPath, methods.DELETE),
+  generateCryptoKey: (keySize) => vmDisk(diskPath, methods.GENERATE_CRYPTO_KEY, keySize),
+  generateCryptoKeyIn: (keySize, dirPath) => vmDisk(
+    diskPath,
+    methods.GENERATE_CRYPTO_KEY_IN,
+    parseInt(keySize, 10), dirPath,
+  ),
+  mount: (dirPath, readOnly) => vmDisk(diskPath, methods.MOUNT, dirPath, readOnly),
+  umount: () => vmDisk(diskPath, methods.UMOUNT),
 });
-
-export default actions;

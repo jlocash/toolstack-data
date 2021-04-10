@@ -1,17 +1,31 @@
-import { all, call, fork, put, race, take } from 'redux-saga/effects';
-import actions from './actions';
+import {
+  all, fork, put, take,
+} from 'redux-saga/effects';
 import websocketActions from '../websocket/actions';
-import initializeDbus from './interfaces/freedesktop/sagas';
-import initializeUsbDaemon from './interfaces/usb_daemon/sagas';
-import initializeInputDaemon from './interfaces/input_daemon/sagas';
-import initializeNdvms from './interfaces/network_daemon/sagas';
+import actions from './actions';
+import { messageTypes } from './constants';
+import sendMessage from './sendMessage';
+import registerSignals from './interfaces/freedesktop/sagas';
+import initializeInput from './interfaces/input_daemon/sagas';
+import initializeNetworkDaemon from './interfaces/network_daemon/sagas';
 import initializeSurfman from './interfaces/surfman/sagas';
 import initializeUpdatemgr from './interfaces/updatemgr/sagas';
-import initializeXcpmd from './interfaces/xcpmd/sagas';
+import initializeUsbDaemon from './interfaces/usb_daemon/sagas';
+import initializeBatteries from './interfaces/xcpmd/sagas';
 import initializeXenmgr from './interfaces/xenmgr/sagas';
-import initializeXenmgrHost from './interfaces/xenmgr_host/sagas';
-import initializeXenmgrUi from './interfaces/xenmgr_ui/sagas';
-import initializeXenmgrVm from './interfaces/xenmgr_vm/sagas';
+import initializeHost from './interfaces/xenmgr_host/sagas';
+import initializeUi from './interfaces/xenmgr_ui/sagas';
+import initializeVms from './interfaces/xenmgr_vm/sagas';
+
+// outgoing
+// {
+//   id: int,
+//   destination: string,
+//   interface: string,
+//   path: string,
+//   method: string,
+//   args: [any],
+// }
 
 // signal
 // {
@@ -41,76 +55,46 @@ import initializeXenmgrVm from './interfaces/xenmgr_vm/sagas';
 //     ]
 // }
 
-const isResponse = (action, id) => {
-  return (
-    action.type === actions.DBUS_RESPONSE_RECEIVED &&
-    action.payload['response-to'] == id
-  );
-};
-
-const isError = (action, id) => {
-  return (
-    action.type === actions.DBUS_ERROR_RECEIVED &&
-    action.payload['response-to'] == id
-  );
-};
-
-function* handleResponseReceived(message) {
-  const { payload } = yield take(action => isResponse(action, message.id));
-  yield put({
-    type: actions.DBUS_MESSAGE_COMPLETED,
-    payload: {
-      destination: message.destination,
-      path: message.path,
-      interface: message.interface,
-      method: message.method,
-      sent: message.args,
-      received: payload.args,
-    },
-  });
-}
-
-function* handleErrorReceived(message) {
-  const { payload } = yield take(action => isError(action, message.id));
-  console.log('error: ', payload);
-  console.log('message: ', message);
-}
-
-export function* sendMessage({ payload }) {
-  yield put(websocketActions.sendMessage(payload));
-  yield race([
-    call(handleResponseReceived, payload),
-    call(handleErrorReceived, payload),
-  ]);
-}
+const isSignal = (action) => (
+  action.type === websocketActions.SOCKET_MESSAGE_RECEIVED
+  && action.data.type === messageTypes.SIGNAL
+);
 
 function* watchSendMessage() {
   while (true) {
-    const message = yield take(actions.DBUS_SEND_MESSAGE);
-    yield fork(sendMessage, message);
+    const { data } = yield take(actions.DBUS_SEND_MESSAGE);
+    yield fork(sendMessage, data);
+  }
+}
+
+function* watchSignals() {
+  while (true) {
+    const { data } = yield take(isSignal);
+    yield put({ type: actions.DBUS_SIGNAL_RECEIVED, data });
   }
 }
 
 function* initialize() {
-  yield initializeDbus();
+  yield registerSignals();
   yield all([
-    initializeXenmgr(),
-    initializeXenmgrHost(),
-    initializeXenmgrUi(),
-    initializeXenmgrVm(),
-    initializeNdvms(),
-    initializeUsbDaemon(),
-    initializeInputDaemon(),
-    initializeXcpmd(),
+    initializeInput(),
+    initializeNetworkDaemon(),
     initializeSurfman(),
     initializeUpdatemgr(),
+    initializeUsbDaemon(),
+    initializeBatteries(),
+    initializeXenmgr(),
+    initializeHost(),
+    initializeUi(),
+    initializeVms(),
   ]);
 }
 
-export function* dbusSaga() {
-  yield take(websocketActions.SOCKET_READY);
+export default function* dbusSaga() {
+  yield take(websocketActions.SOCKET_CONNECTION_READY);
   yield all([
     watchSendMessage(),
+    watchSignals(),
     initialize(),
   ]);
 }

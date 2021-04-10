@@ -1,4 +1,3 @@
-
 export const WALLPAPER_DIR = 'wallpaper';
 
 export const DEFAULT_WALLPAPERS = [

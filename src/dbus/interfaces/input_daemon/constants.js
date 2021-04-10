@@ -1,4 +1,3 @@
-
 export const signals = {
   KEYBOARD_FOCUS_CHANGE: 'keyboard_focus_change',
   FOCUS_AUTH_FIELD: 'focus_auth_field',

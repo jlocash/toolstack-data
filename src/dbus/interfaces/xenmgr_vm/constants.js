@@ -1,4 +1,4 @@
-export const methods = {
+export default {
   // vm
   ADD_ARGO_FIREWALL_RULE: 'add_argo_firewall_rule',
   ADD_DISK: 'add_disk',

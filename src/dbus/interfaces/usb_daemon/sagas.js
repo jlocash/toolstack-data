@@ -1,14 +1,17 @@
-import { all, call, fork, put, select, take } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
-import usbdaemon, { USB_DEVICE_INITIALIZED } from './actions';
+import {
+  all, call, fork, put, select, take,
+} from 'redux-saga/effects';
+import sendMessage from '../../sendMessage';
+import usbdaemon, { types } from './actions';
 import { signals } from './constants';
 import dbusActions from '../../actions';
+import { interfaces } from '../../constants';
 
 function* loadDevice(deviceId) {
   yield call(sendMessage, usbdaemon.getDeviceInfo(deviceId, ''));
   yield put({
-    type: USB_DEVICE_INITIALIZED,
-    payload: {
+    type: types.USB_DEVICE_INITIALIZED,
+    data: {
       deviceId,
     },
   });
@@ -16,26 +19,26 @@ function* loadDevice(deviceId) {
 
 function* loadDevices() {
   yield call(sendMessage, usbdaemon.listDevices());
-  const devices = yield select(state => state.dbus.usbDevices);
-  yield all(Object.keys(devices).map(deviceId => call(loadDevice, deviceId)));
+  const devices = yield select((state) => state.dbus.usbDevices);
+  yield all(Object.keys(devices).map((deviceId) => call(loadDevice, deviceId)));
 }
 
-const signalMatcher = action => (
-  action.type === dbusActions.DBUS_SIGNAL_RECEIVED &&
-  action.payload.interface === 'com.citrix.xenclient.usbdaemon'
+const signalMatcher = (action) => (
+  action.type === dbusActions.DBUS_SIGNAL_RECEIVED
+  && action.data.interface === interfaces.USB_DAEMON
 );
 
 function* watchSignals() {
   while (true) {
-    const { payload } = yield take(signalMatcher);
-    switch (payload.member) {
+    const { data } = yield take(signalMatcher);
+    switch (data.member) {
       case signals.DEVICE_ADDED: {
-        const [deviceId] = payload.args;
+        const [deviceId] = data.args;
         yield fork(loadDevice, deviceId);
         break;
       }
       case signals.DEVICE_INFO_CHANGED: {
-        const [deviceId] = payload.args;
+        const [deviceId] = data.args;
         yield fork(loadDevice, deviceId);
         break;
       }
@@ -52,11 +55,9 @@ function* watchSignals() {
   }
 }
 
-function* initialize() {
+export default function* initialize() {
   yield all([
     loadDevices(),
     watchSignals(),
   ]);
 }
-
-export default initialize;

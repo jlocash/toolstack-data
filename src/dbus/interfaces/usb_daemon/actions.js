@@ -1,29 +1,61 @@
 import dbusActions from '../../actions';
+import { interfaces, services } from '../../constants';
 import { methods } from './constants';
 
-export const USB_DEVICE_INITIALIZED = 'USB_DEVICE_INITIALIZED';
+export const types = {
+  USB_DEVICE_INITIALIZED: 'USB_DEVICE_INITIALIZED',
+};
 
-const service = 'com.citrix.xenclient.usbdaemon';
-const iface = service;
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
 const path = '/';
 
+const usbDaemon = (method, ...args) => dbusActions.sendMessage(
+  services.USB_DAEMON,
+  path,
+  interfaces.USB_DAEMON,
+  method,
+  ...args,
+);
+
 const actions = {
-  getProperty: (name) => dbusActions.sendMessage(service, path, freedesktopIface, 'Get', iface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, path, freedesktopIface, 'GetAll', iface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, path, freedesktopIface, 'Set', iface, name, value),
-  assignDevice: (deviceId, vmUuid) => dbusActions.sendMessage(service, path, iface, methods.ASSIGN_DEVICE, parseInt(deviceId), vmUuid),
-  getDeviceInfo: (deviceId, vmUuid) => dbusActions.sendMessage(service, path, iface, methods.GET_DEVICE_INFO, parseInt(deviceId), vmUuid),
-  getPolicyDomUuid: (vmUuid) => dbusActions.sendMessage(service, path, iface, methods.GET_POLICY_DOMUUID, vmUuid),
-  listDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_DEVICES),
-  nameDevice: (deviceId, name) => dbusActions.sendMessage(service, path, iface, methods.NAME_DEVICE, parseInt(deviceId), name),
-  newVm: (domId) => dbusActions.sendMessage(service, path, iface, methods.NEW_VM, parseInt(domId)),
-  reloadPolicy: () => dbusActions.sendMessage(service, path, iface, methods.RELOAD_POLICY),
-  setPolicyDomUuid: (vmUuid, policy) => dbusActions.sendMessage(service, path, iface, methods.SET_POLICY_DOMUUID, vmUuid, policy),
-  setSticky: (deviceId, sticky) => dbusActions.sendMessage(service, path, iface, methods.SET_STICKY, parseInt(deviceId), sticky),
-  state: () => dbusActions.sendMessage(service, path, iface, methods.STATE),
-  unassignDevice: (deviceId) => dbusActions.sendMessage(service, path, iface, methods.UNASSIGN_DEVICE, parseInt(deviceId)),
-  vmStopped: (domId) => dbusActions.sendMessage(service, path, iface, methods.VM_STOPPED, parseInt(domId)),
+  getProperty: (name) => dbusActions.sendMessage(
+    services.USB_DAEMON,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Get',
+    interfaces.USB_DAEMON, name,
+  ),
+  getAllProperties: () => dbusActions.sendMessage(
+    services.USB_DAEMON,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'GetAll',
+    interfaces.USB_DAEMON,
+  ),
+  setProperty: (name, value) => dbusActions.sendMessage(
+    services.USB_DAEMON,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Set',
+    interfaces.USB_DAEMON, name, value,
+  ),
+  assignDevice: (deviceId, vmUuid) => usbDaemon(
+    methods.ASSIGN_DEVICE,
+    parseInt(deviceId, 10), vmUuid,
+  ),
+  getDeviceInfo: (deviceId, vmUuid) => usbDaemon(
+    methods.GET_DEVICE_INFO,
+    parseInt(deviceId, 10), vmUuid,
+  ),
+  getPolicyDomUuid: (vmUuid) => usbDaemon(methods.GET_POLICY_DOMUUID, vmUuid),
+  listDevices: () => usbDaemon(methods.LIST_DEVICES),
+  nameDevice: (deviceId, name) => usbDaemon(methods.NAME_DEVICE, parseInt(deviceId, 10), name),
+  newVm: (domId) => usbDaemon(methods.NEW_VM, parseInt(domId, 10)),
+  reloadPolicy: () => usbDaemon(methods.RELOAD_POLICY),
+  setPolicyDomUuid: (vmUuid, policy) => usbDaemon(methods.SET_POLICY_DOMUUID, vmUuid, policy),
+  setSticky: (deviceId, sticky) => usbDaemon(methods.SET_STICKY, parseInt(deviceId, 10), sticky),
+  state: () => usbDaemon(methods.STATE),
+  unassignDevice: (deviceId) => usbDaemon(methods.UNASSIGN_DEVICE, parseInt(deviceId, 10)),
+  vmStopped: (domId) => usbDaemon(methods.VM_STOPPED, parseInt(domId, 10)),
 };
 
 export default actions;

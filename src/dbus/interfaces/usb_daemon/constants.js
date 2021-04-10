@@ -1,4 +1,3 @@
-
 export const signals = {
   DEVICE_ADDED: 'device_added',
   DEVICE_REJECTED: 'device_rejected',

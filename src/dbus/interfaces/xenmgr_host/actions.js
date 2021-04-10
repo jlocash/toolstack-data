@@ -1,57 +1,109 @@
 import dbusActions from '../../actions';
+import { interfaces, services } from '../../constants';
 import { methods } from './constants';
 
-export const XENMGR_HOST_INITIALIZED = 'XENMGR_HOST_INITIALIZED';
+export const types = {
+  XENMGR_HOST_INITIALIZED: 'XENMGR_HOST_INITIALIZED',
+};
 
-const service = 'com.citrix.xenclient.xenmgr';
-const iface = `${service}.host`;
-const installerIface = `${service}.installer`;
-const powersettingsIface = `${service}.powersettings`;
 const path = '/host';
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
+
+const host = (method, ...args) => dbusActions.sendMessage(
+  services.XENMGR,
+  path,
+  interfaces.HOST,
+  method,
+  ...args,
+);
+
+const installer = (method, ...args) => dbusActions.sendMessage(
+  services.XENMGR,
+  path,
+  interfaces.INSTALLER,
+  method,
+  ...args,
+);
+
+const powersettings = (method, ...args) => dbusActions.sendMessage(
+  services.XENMGR,
+  path,
+  interfaces.POWERSETTINGS,
+  method,
+  ...args,
+);
 
 const actions = {
   // properties
-  getProperty: (name) => dbusActions.sendMessage(service, path, freedesktopIface, 'Get', iface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, path, freedesktopIface, 'GetAll', iface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, path, freedesktopIface, 'Set', iface, name, value),
+  getProperty: (name) => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Get',
+    interfaces.HOST, name,
+  ),
+  getAllProperties: () => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'GetAll',
+    interfaces.HOST,
+  ),
+  setProperty: (name, value) => dbusActions.sendMessage(
+    services.XENMGR,
+    path,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Set',
+    interfaces.HOST, name, value,
+  ),
 
   // host
-  assignCdDevice: (deviceId, sticky, vmUuid) => dbusActions.sendMessage(service, path, iface, methods.ASSIGN_CD_DEVICE, deviceId, sticky, vmUuid),
-  configureGpuPlacement: (gpuId, slot) => dbusActions.sendMessage(service, path, iface, methods.CONFIGURE_GPU_PLACEMENT, gpuId, slot),
-  ejectCdDevice: (deviceId) => dbusActions.sendMessage(service, path, iface, methods.EJECT_CD_DEVICE, deviceId),
-  getCdDeviceAssignment: (deviceId, sticky, vmUuid) => dbusActions.sendMessage(service, path, iface, methods.GET_CD_DEVICE_ASSIGNMENT, deviceId, sticky, vmUuid),
-  getGpuPlacement: (gpuId, slot) => dbusActions.sendMessage(service, path, iface, methods.GET_GPU_PLACEMENT, gpuId, slot),
-  getSecondsFromEpoch: () => dbusActions.sendMessage(service, path, iface, methods.GET_SECONDS_FROM_EPOCH),
-  getSoundCardControl: (card, control) => dbusActions.sendMessage(service, path, iface, methods.GET_SOUND_CARD_CONTROL, card, control),
-  hibernate: () => dbusActions.sendMessage(service, path, iface, methods.HIBERNATE),
-  isServiceRunning: (service) => dbusActions.sendMessage(service, path, iface, methods.IS_SERVICE_RUNNING, service),
-  listCaptureDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_CAPTURE_DEVICES),
-  listCdDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_CD_DEVICES),
-  listDiskDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_DISK_DEVICES),
-  listGpuDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_GPU_DEVICES),
-  listIsos: () => dbusActions.sendMessage(service, path, iface, methods.LIST_ISOS),
-  listPciDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_PCI_DEVICES),
-  listPlaybackDevices: () => dbusActions.sendMessage(service, path, iface, methods.LIST_PLAYBACK_DEVICES),
-  listSoundCardControls: (card) => dbusActions.sendMessage(service, path, iface, methods.LIST_SOUND_CARD_CONTROLS, card),
-  listSoundCards: () => dbusActions.sendMessage(service, path, iface, methods.LIST_SOUND_CARDS),
-  listUiPlugins: (subdir) => dbusActions.sendMessage(service, path, iface, methods.LIST_UI_PLUGINS, subdir),
-  reboot: () => dbusActions.sendMessage(service, path, iface, methods.REBOOT),
-  setLicense: (expiryDate, deviceUuid, hash) => dbusActions.sendMessage(service, path, iface, methods.SET_LICENSE, expiryDate, deviceUuid, hash),
-  setSoundCardControl: (card, control, value) => dbusActions.sendMessage(service, path, iface, methods.SET_SOUND_CARD_CONTROL, card, control, value),
-  shutdown: () => dbusActions.sendMessage(service, path, iface, methods.SHUTDOWN),
-  sleep: () => dbusActions.sendMessage(service, path, iface, methods.SLEEP),
+  assignCdDevice: (deviceId, sticky, vmUuid) => host(
+    methods.ASSIGN_CD_DEVICE,
+    deviceId, sticky, vmUuid,
+  ),
+  configureGpuPlacement: (gpuId, slot) => host(methods.CONFIGURE_GPU_PLACEMENT, gpuId, slot),
+  ejectCdDevice: (deviceId) => host(methods.EJECT_CD_DEVICE, deviceId),
+  getCdDeviceAssignment: (deviceId, sticky, vmUuid) => host(
+    methods.GET_CD_DEVICE_ASSIGNMENT,
+    deviceId, sticky, vmUuid,
+  ),
+  getGpuPlacement: (gpuId, slot) => host(methods.GET_GPU_PLACEMENT, gpuId, slot),
+  getSecondsFromEpoch: () => host(methods.GET_SECONDS_FROM_EPOCH),
+  getSoundCardControl: (card, control) => host(methods.GET_SOUND_CARD_CONTROL, card, control),
+  hibernate: () => host(methods.HIBERNATE),
+  isServiceRunning: (svc) => host(methods.IS_SERVICE_RUNNING, svc),
+  listCaptureDevices: () => host(methods.LIST_CAPTURE_DEVICES),
+  listCdDevices: () => host(methods.LIST_CD_DEVICES),
+  listDiskDevices: () => host(methods.LIST_DISK_DEVICES),
+  listGpuDevices: () => host(methods.LIST_GPU_DEVICES),
+  listIsos: () => host(methods.LIST_ISOS),
+  listPciDevices: () => host(methods.LIST_PCI_DEVICES),
+  listPlaybackDevices: () => host(methods.LIST_PLAYBACK_DEVICES),
+  listSoundCardControls: (card) => host(methods.LIST_SOUND_CARD_CONTROLS, card),
+  listSoundCards: () => host(methods.LIST_SOUND_CARDS),
+  listUiPlugins: (subdir) => host(methods.LIST_UI_PLUGINS, subdir),
+  reboot: () => host(methods.REBOOT),
+  setLicense: (expiryDate, deviceUuid, hash) => host(
+    methods.SET_LICENSE,
+    expiryDate, deviceUuid, hash,
+  ),
+  setSoundCardControl: (card, control, value) => host(
+    methods.SET_SOUND_CARD_CONTROL,
+    card, control, value,
+  ),
+  shutdown: () => host(methods.SHUTDOWN),
+  sleep: () => host(methods.SLEEP),
 
   // installer
-  getEula: () => dbusActions.sendMessage(service, path, installerIface, methods.GET_EULA),
-  getInstallstate: () => dbusActions.sendMessage(service, path, installerIface, methods.GET_INSTALLSTATE),
-  progressInstallstate: (action) => dbusActions.sendMessage(service, path, installerIface, methods.PROGRESS_INSTALLSTATE, action),
+  getEula: () => installer(methods.GET_EULA),
+  getInstallstate: () => installer(methods.GET_INSTALLSTATE),
+  progressInstallstate: (action) => installer(methods.PROGRESS_INSTALLSTATE, action),
 
   // powersettings
-  getAcLidCloseAction: () => dbusActions.sendMessage(service, path, powersettingsIface, methods.GET_AC_LID_CLOSE_ACTION),
-  getBatteryLidCloseAction: () => dbusActions.sendMessage(service, path, powersettingsIface, methods.GET_BATTERY_LID_CLOSE_ACTION),
-  setAcLidCloseAction: (action) => dbusActions.sendMessage(service, path, powersettingsIface, methods.SET_AC_LID_CLOSE_ACTION, action),
-  setBatteryLidCloseAction: (action) => dbusActions.sendMessage(service, path, powersettingsIface, methods.SET_BATTERY_LID_CLOSE_ACTION, action),
+  getAcLidCloseAction: () => powersettings(methods.GET_AC_LID_CLOSE_ACTION),
+  getBatteryLidCloseAction: () => powersettings(methods.GET_BATTERY_LID_CLOSE_ACTION),
+  setAcLidCloseAction: (action) => powersettings(methods.SET_AC_LID_CLOSE_ACTION, action),
+  setBatteryLidCloseAction: (action) => powersettings(methods.SET_BATTERY_LID_CLOSE_ACTION, action),
 };
 
 export default actions;

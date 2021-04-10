@@ -2,15 +2,15 @@ import dbusActions from '../../actions';
 import { NDVM_INITIALIZED } from '../network_domain/actions';
 import { methods as daemonMethods } from './constants';
 import { methods as domainMethods } from '../network_domain/constants';
-import { NETWORK_INITIALIZED } from '../network/actions';
+import { types as networkTypes } from '../network/actions';
+import { interfaces, services } from '../../constants';
 
 const initialState = {};
 
 const networkDaemonReducer = (state = initialState, action = {}) => {
-  const { type, payload } = action;
-  switch (type) {
+  switch (action.type) {
     case NDVM_INITIALIZED: {
-      const { ndvmPath } = payload;
+      const { ndvmPath } = action.data;
       return {
         ...state,
         [ndvmPath]: {
@@ -21,8 +21,8 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case NETWORK_INITIALIZED: {
-      const { networkPath, ndvmPath } = payload;
+    case networkTypes.NETWORK_INITIALIZED: {
+      const { networkPath, ndvmPath } = action.data;
       return {
         ...state,
         [ndvmPath]: {
@@ -39,17 +39,18 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      switch (payload.destination) {
-        case 'com.citrix.xenclient.networkdomain':
-        case 'com.citrix.xenclient.networkdaemon': {
-          switch (payload.interface) {
-            case 'com.citrix.xenclient.networkdaemon': {
-              switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      switch (sent.destination) {
+        case services.NETWORK_DOMAIN:
+        case services.NETWORK_DAEMON: {
+          switch (sent.interface) {
+            case interfaces.NETWORK_DAEMON: {
+              switch (sent.method) {
                 case daemonMethods.LIST_BACKENDS: {
                   const untracked = {};
-                  const [received] = payload.received;
-                  received.forEach((ndvmPath) => {
+                  const [backends] = received.args;
+                  backends.forEach((ndvmPath) => {
                     if (!state[ndvmPath]) {
                       untracked[ndvmPath] = {
                         properties: {},
@@ -65,13 +66,13 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
               }
               break;
             }
-            case 'com.citrix.xenclient.networkdomain': {
-              switch (payload.method) {
+            case interfaces.NETWORK_DOMAIN: {
+              switch (sent.method) {
                 case domainMethods.LIST_NETWORKS: {
-                  const ndvmPath = payload.path;
-                  const [received] = payload.received;
+                  const ndvmPath = sent.path;
+                  const [networks] = received.args;
                   const untracked = {};
-                  received.forEach((network) => {
+                  networks.forEach((network) => {
                     if (!state[ndvmPath].networks[network]) {
                       untracked[network] = {
                         properties: {},
@@ -96,15 +97,15 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
               }
               break;
             }
-            case 'org.freedesktop.DBus.Properties': {
-              switch (payload.sent[0]) {
-                case 'com.citrix.xenclient.networkdomain.config': {
-                  if (payload.method === 'GetAll') {
-                    const ndvmPath = payload.path;
-                    const [received] = payload.received;
+            case interfaces.FREEDESKTOP_PROPERTIES: {
+              switch (sent.args[0]) {
+                case interfaces.NETWORK_DOMAIN_CONFIG: {
+                  if (sent.method === 'GetAll') {
+                    const ndvmPath = sent.path;
+                    const [newProperties] = received.args;
                     const properties = {};
-                    Object.keys(received).forEach((key) => {
-                      properties[key.replace(/-/g, '_')] = received[key];
+                    Object.keys(newProperties).forEach((key) => {
+                      properties[key.replace(/-/g, '_')] = newProperties[key];
                     });
 
                     return {
@@ -117,13 +118,13 @@ const networkDaemonReducer = (state = initialState, action = {}) => {
                   }
                   break;
                 }
-                case 'com.citrix.xenclient.network.config': {
-                  if (payload.method === 'GetAll') {
-                    const network = payload.path;
-                    const [received] = payload.received;
+                case interfaces.NETWORK_CONFIG: {
+                  if (sent.method === 'GetAll') {
+                    const network = sent.path;
+                    const [newProperties] = received.args;
                     const properties = {};
-                    Object.keys(received).forEach((key) => {
-                      properties[key.replace(/-/g, '_')] = received[key];
+                    Object.keys(newProperties).forEach((key) => {
+                      properties[key.replace(/-/g, '_')] = newProperties[key];
                     });
                     const ndvmPath = `/ndvm/${properties.backend_uuid.replace(/-/g, '_')}`;
                     return {

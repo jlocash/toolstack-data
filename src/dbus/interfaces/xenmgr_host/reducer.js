@@ -1,6 +1,9 @@
 import dbusActions from '../../actions';
-import { XENMGR_HOST_INITIALIZED } from './actions';
-import { methods, signals, WALLPAPER_DIR, DEFAULT_WALLPAPERS } from './constants';
+import { interfaces, services } from '../../constants';
+import { types } from './actions';
+import {
+  methods, signals, WALLPAPER_DIR, DEFAULT_WALLPAPERS,
+} from './constants';
 
 const initialState = {
   properties: {
@@ -66,9 +69,8 @@ const initialState = {
 };
 
 const xenmgrHostReducer = (state = initialState, action) => {
-  const { type, payload } = action;
-  switch (type) {
-    case XENMGR_HOST_INITIALIZED: {
+  switch (action.type) {
+    case types.XENMGR_HOST_INITIALIZED: {
       return {
         ...state,
         meta: {
@@ -76,13 +78,14 @@ const xenmgrHostReducer = (state = initialState, action) => {
         },
       };
     }
-    case dbusActions.DBUS_MESSAGE_COMPLETED: {
-      if (payload.destination === 'com.citrix.xenclient.xenmgr') {
-        switch (payload.interface) {
-          case 'com.citrix.xenclient.xenmgr.host':
-          case 'com.citrix.xenclient.xenmgr.installer':
-          case 'com.citrix.xenclient.xenmgr.powersettings': {
-            switch (payload.method) {
+    case dbusActions.DBUS_RESPONSE_RECEIVED: {
+      const { sent, received } = action.data;
+      if (sent.destination === services.XENMGR) {
+        switch (sent.interface) {
+          case interfaces.HOST:
+          case interfaces.INSTALLER:
+          case interfaces.POWERSETTINGS: {
+            switch (sent.method) {
               // host
               case methods.ASSIGN_CD_DEVICE:
               case methods.CONFIGURE_GPU_PLACEMENT:
@@ -95,44 +98,44 @@ const xenmgrHostReducer = (state = initialState, action) => {
                 break;
               }
               case methods.GET_SECONDS_FROM_EPOCH: {
-                const [seconds_from_epoch] = payload.received;
-                return { ...state, seconds_from_epoch };
+                const [seconds] = received.args;
+                return { ...state, seconds_from_epoch: seconds };
               }
               case methods.LIST_CAPTURE_DEVICES: {
-                const [capture_devices] = payload.received;
-                return { ...state, capture_devices };
+                const [captureDevices] = received.args;
+                return { ...state, capture_devices: captureDevices };
               }
               case methods.LIST_CD_DEVICES: {
-                const [cd_devices] = payload.received;
-                return { ...state, cd_devices };
+                const [cdDevices] = received.args;
+                return { ...state, cd_devices: cdDevices };
               }
               case methods.LIST_DISK_DEVICES: {
-                const [disk_devices] = payload.received;
-                return { ...state, disk_devices };
+                const [diskDevices] = received.args;
+                return { ...state, disk_devices: diskDevices };
               }
               case methods.LIST_GPU_DEVICES: {
-                const [gpu_devices] = payload.received;
-                return { ...state, gpu_devices };
+                const [gpuDevices] = received.args;
+                return { ...state, gpu_devices: gpuDevices };
               }
               case methods.LIST_ISOS: {
-                const [isos] = payload.received;
+                const [isos] = received.args;
                 return { ...state, isos };
               }
               case methods.LIST_PCI_DEVICES: {
-                const [pci_devices] = payload.received;
-                return { ...state, pci_devices };
+                const [pciDevices] = received.args;
+                return { ...state, pci_devices: pciDevices };
               }
               case methods.LIST_PLAYBACK_DEVICES: {
-                const [playback_devices] = payload.received;
-                return { ...state, playback_devices };
+                const [playbackDevices] = received.args;
+                return { ...state, playback_devices: playbackDevices };
               }
               case methods.LIST_SOUND_CARDS: {
-                const [sound_cards] = payload.received;
-                return { ...state, sound_cards };
+                const [soundCards] = received.args;
+                return { ...state, sound_cards: soundCards };
               }
               case methods.LIST_SOUND_CARD_CONTROLS: {
-                const id = payload.sent[0];
-                const [controls] = payload.received;
+                const id = sent.args[0];
+                const [controls] = received.args;
                 return {
                   ...state,
                   sound_card_controls: {
@@ -142,11 +145,13 @@ const xenmgrHostReducer = (state = initialState, action) => {
                 };
               }
               case methods.LIST_UI_PLUGINS: {
-                const [received] = payload.received;
-                if (payload.sent[0] === WALLPAPER_DIR) {
-                  const custom = received.filter(path => /thumb.png$/.test(path));
-                  const available_wallpapers = [...DEFAULT_WALLPAPERS, ...custom];
-                  return { ...state, available_wallpapers };
+                const [plugins] = received.args;
+                if (sent.args[0] === WALLPAPER_DIR) {
+                  const custom = plugins.filter((path) => /thumb.png$/.test(path));
+                  return {
+                    ...state,
+                    available_wallpapers: [...DEFAULT_WALLPAPERS, ...custom],
+                  };
                 }
                 break;
               }
@@ -160,16 +165,16 @@ const xenmgrHostReducer = (state = initialState, action) => {
 
               // installer
               case methods.GET_EULA: {
-                const [eula] = payload.received;
+                const [eula] = received.args;
                 return { ...state, eula };
               }
               case methods.GET_INSTALLSTATE: {
-                const [received] = payload.received;
-                const install_state = {};
-                Object.keys(received).forEach(key => {
-                  install_state[key.replace(/-/g, '_')] = received[key];
+                const [install] = received.args;
+                const installState = {};
+                Object.keys(install).forEach((key) => {
+                  installState[key.replace(/-/g, '_')] = install[key];
                 });
-                return { ...state, install_state };
+                return { ...state, install_state: installState };
               }
               case methods.PROGRESS_INSTALLSTATE: {
                 return state;
@@ -177,12 +182,12 @@ const xenmgrHostReducer = (state = initialState, action) => {
 
               // powersettings
               case methods.GET_AC_LID_CLOSE_ACTION: {
-                const [ac_lid_close_action] = payload.received;
-                return { ...state, ac_lid_close_action };
+                const [acLidCloseAction] = received.args;
+                return { ...state, ac_lid_close_action: acLidCloseAction };
               }
               case methods.GET_BATTERY_LID_CLOSE_ACTION: {
-                const [battery_lid_close_action] = payload.received;
-                return { ...state, battery_lid_close_action };
+                const [batteryLidCloseAction] = received.args;
+                return { ...state, battery_lid_close_action: batteryLidCloseAction };
               }
               case methods.SET_AC_LID_CLOSE_ACTION:
               case methods.SET_BATTERY_LID_CLOSE_ACTION: {
@@ -191,24 +196,20 @@ const xenmgrHostReducer = (state = initialState, action) => {
             }
             break;
           }
-          case 'org.freedesktop.DBus.Properties': {
-            if (payload.sent[0] === 'com.citrix.xenclient.xenmgr.host') {
-              switch (payload.method) {
+          case interfaces.FREEDESKTOP_PROPERTIES: {
+            if (sent.args[0] === 'com.citrix.xenclient.xenmgr.host') {
+              switch (sent.method) {
                 case 'GetAll': {
-                  const [received] = payload.received;
+                  const [newProperties] = received.args;
                   const properties = {};
-                  Object.keys(received).forEach((key) => {
-                    properties[key.replace(/-/g, '_')] = received[key];
+                  Object.keys(newProperties).forEach((key) => {
+                    properties[key.replace(/-/g, '_')] = newProperties[key];
                   });
 
-                  return {
-                    ...state,
-                    ...state,
-                    properties,
-                  };
+                  return { ...state, properties };
                 }
                 case 'Set': {
-                  const [prop, value] = payload.sent.slice(-2);
+                  const [prop, value] = sent.args.slice(-2);
                   return {
                     ...state,
                     properties: {
@@ -225,11 +226,12 @@ const xenmgrHostReducer = (state = initialState, action) => {
       break;
     }
     case dbusActions.DBUS_SIGNAL_RECEIVED: {
-      if (payload.interface === 'com.citrix.xenclient.xenmgr.host') {
-        switch (payload.member) {
+      const signal = action.data;
+      if (signal.interface === 'com.citrix.xenclient.xenmgr.host') {
+        switch (signal.member) {
           // host
           case signals.STATE_CHANGED: {
-            const [hostState] = payload.received;
+            const [hostState] = signal.args;
             return {
               ...state,
               properties: {

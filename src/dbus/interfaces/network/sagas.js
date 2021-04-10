@@ -1,12 +1,12 @@
 import { call, put } from 'redux-saga/effects';
-import actions, { NETWORK_INITIALIZED } from '../network/actions';
-import { sendMessage } from '../../sagas';
+import actions, { types } from './actions';
+import sendMessage from '../../sendMessage';
 
-export function* loadNetwork(ndvmPath, networkPath) {
+export default function* loadNetwork(ndvmPath, networkPath) {
   yield call(sendMessage, actions(networkPath).getAllProperties());
   yield put({
-    type: NETWORK_INITIALIZED,
-    payload: {
+    type: types.NETWORK_INITIALIZED,
+    data: {
       ndvmPath,
       networkPath,
     },

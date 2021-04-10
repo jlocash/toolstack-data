@@ -1,12 +1,12 @@
 import { call, put } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
-import actions, { VM_DISK_INITIALIZED } from './actions';
+import sendMessage from '../../sendMessage';
+import actions, { types } from './actions';
 
-export function* loadVmDisk(vmPath, diskPath) {
+export default function* loadVmDisk(vmPath, diskPath) {
   yield call(sendMessage, actions(diskPath).getAllProperties());
   yield put({
-    type: VM_DISK_INITIALIZED,
-    payload: {
+    type: types.VM_DISK_INITIALIZED,
+    data: {
       vmPath,
       diskPath,
     },

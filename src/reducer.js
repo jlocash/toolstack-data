@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import dbusReducer from './dbus/reducers';
 import websocketReducer from './websocket/reducer';
+import dbusReducer from './dbus/reducer';
 
 const rootReducer = combineReducers({
   dbus: dbusReducer,

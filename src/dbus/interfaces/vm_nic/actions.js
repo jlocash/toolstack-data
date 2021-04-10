@@ -1,17 +1,40 @@
 import dbusActions from '../../actions';
-import { methods } from './constants';
+import { interfaces, services } from '../../constants';
+import methods from './constants';
 
-export const VM_NIC_INITIALIZED = 'VM_NIC_INITIALIZED';
-
-const service = 'com.citrix.xenclient.xenmgr';
-const iface = 'com.citrix.xenclient.vmnic';
-const freedesktopIface = 'org.freedesktop.DBus.Properties';
+export const types = {
+  VM_NIC_INITIALIZED: 'VM_NIC_INITIALIZED',
+};
 
 const actions = (nicPath) => ({
-  getProperty: (name) => dbusActions.sendMessage(service, nicPath, freedesktopIface, 'Get', iface, name),
-  getAllProperties: () => dbusActions.sendMessage(service, nicPath, freedesktopIface, 'GetAll', iface),
-  setProperty: (name, value) => dbusActions.sendMessage(service, nicPath, freedesktopIface, 'Set', iface, name, value),
-  delete: () => dbusActions.sendMessage(service, nicPath, iface, methods.DELETE),
+  getProperty: (name) => dbusActions.sendMessage(
+    services.XENMGR,
+    nicPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Get',
+    interfaces.VM_NIC, name,
+  ),
+  getAllProperties: () => dbusActions.sendMessage(
+    services.XENMGR,
+    nicPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'GetAll',
+    interfaces.VM_NIC,
+  ),
+  setProperty: (name, value) => dbusActions.sendMessage(
+    services.XENMGR,
+    nicPath,
+    interfaces.FREEDESKTOP_PROPERTIES,
+    'Set',
+    interfaces.VM_NIC,
+    name, value,
+  ),
+  delete: () => dbusActions.sendMessage(
+    services.XENMGR,
+    nicPath,
+    interfaces.VM_NIC,
+    methods.DELETE,
+  ),
 });
 
 export default actions;

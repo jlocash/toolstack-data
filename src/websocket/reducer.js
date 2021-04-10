@@ -1,19 +1,20 @@
 import actions from './actions';
 
 const initialState = {
-  connected: false,
+  url: '',
+  ready: false,
 };
 
-const reducer = (state = initialState, action = {}) => {
-  switch (action.type) {
-    case actions.SOCKET_CONNECTION_ESTABLISHED: {
-      return { ...state, connected: true };
-    }
-    case actions.SOCKET_CONNECTION_CLOSED: {
-      return { ...state, connected: false };
+export default (state = initialState, action) => {
+  const { type, data } = action;
+  switch (type) {
+    case actions.SOCKET_CONNECTION_READY: {
+      return {
+        ...state,
+        url: data.url,
+        ready: true,
+      };
     }
   }
   return state;
 };
-
-export default reducer;

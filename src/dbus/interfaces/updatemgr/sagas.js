@@ -1,5 +1,5 @@
 import { call, put } from 'redux-saga/effects';
-import { sendMessage } from '../../sagas.js';
+import sendMessage from '../../sendMessage';
 import updatemgr, { UPDATEMGR_INITIALIZED } from './actions';
 
 function* initialize() {

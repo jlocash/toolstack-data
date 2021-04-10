@@ -1,10 +1,10 @@
-import { eventChannel } from 'redux-saga';
 import {
   all, call, fork, put, take,
 } from 'redux-saga/effects';
+import { eventChannel } from 'redux-saga';
 import actions from './actions';
-import dbusActions, { messageTypes } from '../dbus/actions';
 
+// promisify the creation of a WebSocket connection
 const createSocketConnection = () => new Promise((resolve, reject) => {
   try {
     const host = process.env.REMOTE_HOST || window.location.hostname;
@@ -18,22 +18,12 @@ const createSocketConnection = () => new Promise((resolve, reject) => {
   }
 });
 
-function* sendMessage(socket, payload) {
-  yield put({ type: actions.SOCKET_INCREMENT_OUTGOING });
-  socket.send(JSON.stringify(payload));
-}
-
-function* watchSendMessage(socket) {
-  while (true) {
-    const { payload } = yield take(actions.SOCKET_SEND_MESSAGE);
-    yield fork(sendMessage, socket, payload)
-  }
-}
-
-const createSocketChannel = (socket) => eventChannel((emit) => {
+// create an event channel for the socket connection
+const createSocketChannel = (socket) => eventChannel((emitter) => {
+  // eslint-disable-next-line
   socket.onmessage = (event) => {
-    const payload = JSON.parse(event.data);
-    emit(payload);
+    const message = JSON.parse(event.data);
+    emitter(message);
   };
 
   return () => {
@@ -41,38 +31,37 @@ const createSocketChannel = (socket) => eventChannel((emit) => {
   };
 });
 
-function* watchIncomingMessages(socket) {
-  const channel = yield call(createSocketChannel, socket);
+function* sendMessage(socket, message) {
+  yield put({ type: actions.SOCKET_MESSAGE_SENT, data: message });
+  socket.send(JSON.stringify(message));
+}
+
+function* watchSendMessage(socket) {
   while (true) {
-    const payload = yield take(channel);
-    switch (payload.type) {
-      case messageTypes.SIGNAL: {
-        yield put({ type: dbusActions.DBUS_SIGNAL_RECEIVED, payload });
-        break;
-      }
-      case messageTypes.RESPONSE: {
-        yield put({ type: dbusActions.DBUS_RESPONSE_RECEIVED, payload });
-        break;
-      }
-      case messageTypes.ERROR: {
-        yield put({ type: dbusActions.DBUS_ERROR_RECEIVED, payload });
-        break;
-      }
-    }
+    const { data } = yield take(actions.SOCKET_SEND_MESSAGE);
+    yield fork(sendMessage, socket, data);
   }
 }
 
-export function* websocketSaga() {
+// dispatch actions when WebSocket messages are received
+function* watchIncomingMessages(socket) {
+  const channel = createSocketChannel(socket);
+  while (true) {
+    const message = yield take(channel);
+    yield put({ type: actions.SOCKET_MESSAGE_RECEIVED, data: message });
+  }
+}
+
+export default function* websocketSaga() {
   try {
     const socket = yield call(createSocketConnection);
-    yield put({ type: actions.SOCKET_CONNECTION_ESTABLISHED });
-    yield put({ type: actions.SOCKET_READY });
+    yield put({ type: actions.SOCKET_CONNECTION_READY, data: { url: socket.url } });
     yield all([
-      call(watchSendMessage, socket),
-      call(watchIncomingMessages, socket),
+      watchSendMessage(socket),
+      watchIncomingMessages(socket),
     ]);
   } catch (err) {
     yield put({ type: actions.SOCKET_CONNECTION_ERROR });
-    console.log(err);
+    console.error(err);
   }
 }
