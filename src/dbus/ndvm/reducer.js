@@ -14,6 +14,12 @@ export default (state = initialState, action) => {
       const ndvmState = { ...state[ndvmPath], networks };
       return { ...state, [ndvmPath]: ndvmState };
     }
+    case actions.NDVM_REMOVE: {
+      const { ndvmPath } = action.data;
+      const newState = { ...state.ndvms };
+      delete newState[ndvmPath];
+      return newState;
+    }
   }
   return state;
 };

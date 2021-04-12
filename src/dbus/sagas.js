@@ -60,7 +60,7 @@ function* watchSignals(dbus) {
   const channel = createSignalChannel(dbus);
   while (true) {
     const signal = yield take(channel);
-    yield put({ type: actions.DBUS_SIGNAL_RECEIVED, data: signal });
+    yield put({ type: actions.DBUS_SIGNAL_RECEIVED, data: { signal } });
   }
 }
 
@@ -122,7 +122,7 @@ export default function* dbusSaga() {
   } catch (err) {
     yield put({
       type: actions.DBUS_CONNECTION_ERROR,
+      data: { err },
     });
-    console.error(err);
   }
 }

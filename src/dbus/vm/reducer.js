@@ -51,6 +51,21 @@ export default (state = initialState, action) => {
       const vmState = { ...state[vmPath], disks };
       return { ...state, [vmPath]: vmState };
     }
+    case actions.VM_REMOVE: {
+      const { vmPath } = action.data;
+      const newState = { ...state };
+      delete newState[vmPath];
+      return newState;
+    }
+    case actions.VM_STATE_UPDATED: {
+      const { vmPath, vmState, vmAcpiState } = action.data;
+      const properties = {
+        ...state[vmPath].properties,
+        state: vmState,
+        acpi_state: vmAcpiState,
+      };
+      return { ...state, [vmPath]: { ...state[vmPath], properties } };
+    }
   }
   return state;
 };

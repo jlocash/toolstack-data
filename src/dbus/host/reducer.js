@@ -101,6 +101,11 @@ export default (state = initialState, action) => {
       const usbDevices = { ...state.usbDevices, [device.id]: device };
       return { ...state, usbDevices };
     }
+    case actions.HOST_STATE_UPDATED: {
+      const { newState } = action.data;
+      const properties = { ...state.properties, state: newState };
+      return { ...state, properties };
+    }
   }
   return state;
 };

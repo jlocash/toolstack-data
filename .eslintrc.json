@@ -18,6 +18,7 @@
         "react"
     ],
     "rules": {
-        "default-case": "off"
+        "default-case": "off",
+        "no-console": "off"
     }
 }

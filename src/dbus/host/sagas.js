@@ -2,7 +2,7 @@ import {
   all, call, fork, put, takeEvery,
 } from 'redux-saga/effects';
 import actions from './actions';
-import host, { WALLPAPER_DIR } from '../interfaces/xenmgr_host';
+import host, { WALLPAPER_DIR, signals as hostSignals } from '../interfaces/xenmgr_host';
 import ui from '../interfaces/xenmgr_ui';
 import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
 import input from '../interfaces/input_daemon';
@@ -216,6 +216,14 @@ const signalMatcher = (action) => (
 function* signalHandler(dbus, action) {
   const { signal } = action.data;
   switch (signal.member) {
+    case hostSignals.STATE_CHANGED: {
+      const [newState] = signal.args;
+      yield put({
+        type: actions.HOST_STATE_UPDATED,
+        data: { newState },
+      });
+      break;
+    }
     case xenmgrSignals.CONFIG_CHANGED: {
       yield fork(loadProperties, dbus);
       break;

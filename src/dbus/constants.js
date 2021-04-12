@@ -16,8 +16,10 @@ export const interfaces = {
   INPUT: services.INPUT,
   XCPMD: services.XCPMD,
   NETWORK_DAEMON: services.NETWORK_DAEMON,
+  NETWORK_DAEMON_NOTIFY: `${services.NETWORK_DAEMON}.notify`,
   NETWORK_DOMAIN: services.NETWORK_DOMAIN,
   NETWORK_DOMAIN_CONFIG: `${services.NETWORK_DOMAIN}.config`,
+  NETWORK_DOMAIN_NOTIFY: `${services.NETWORK_DOMAIN}.notify`,
   NETWORK: 'com.citrix.xenclient.network',
   NETWORK_CONFIG: 'com.citrix.xenclient.network.config',
   SURFMAN: services.SURFMAN,
@@ -39,7 +41,6 @@ export const interfaces = {
   XENMGR_CONFIG: `${services.XENMGR}.config`,
   VM_DISK: 'com.citrix.xenclient.vmdisk',
   VM_NIC: 'com.citrix.xenclient.vmnic',
-
 };
 
 export const messageTypes = {

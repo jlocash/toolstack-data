@@ -124,12 +124,38 @@ function* loadVms(dbus) {
 
 const signalMatcher = (action) => (
   action.type === dbusActions.DBUS_SIGNAL_RECEIVED
-  && action.data.interface === interfaces.XENMGR
+  && action.data.signal.interface === interfaces.XENMGR
 );
 
 function* signalHandler(dbus, action) {
   const { signal } = action.data;
   switch (signal.member) {
+    case xenmgrSignals.VM_CREATED: {
+      const [, vmPath] = signal.args;
+      yield fork(loadVm, dbus, vmPath);
+      break;
+    }
+    case xenmgrSignals.VM_DELETED: {
+      const [, vmPath] = signal.args;
+      yield put({
+        type: actions.VM_REMOVE,
+        data: { vmPath },
+      });
+      break;
+    }
+    case xenmgrSignals.VM_STATE_CHANGED: {
+      const [, vmPath, vmState, vmAcpiState] = signal.args;
+      yield put({
+        type: actions.VM_STATE_UPDATED,
+        data: { vmPath, vmState, vmAcpiState },
+      });
+      break;
+    }
+    case xenmgrSignals.VM_TRANSFER_CHANGED: {
+      const [, vmPath] = signal.args;
+      yield fork(loadProperty, dbus, vmPath, 'download-progress');
+      break;
+    }
     case xenmgrSignals.VM_CONFIG_CHANGED: {
       const [, vmPath] = signal.args;
       yield fork(loadVm, dbus, vmPath);
