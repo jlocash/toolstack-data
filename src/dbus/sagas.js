@@ -1,21 +1,14 @@
 import {
-  all, fork, put, take,
+  all, call, put, take,
 } from 'redux-saga/effects';
-import websocketActions from '../websocket/actions';
+import { eventChannel } from 'redux-saga';
 import actions from './actions';
-import { messageTypes } from './constants';
-import sendMessage from './sendMessage';
-import registerSignals from './interfaces/freedesktop/sagas';
-import initializeInput from './interfaces/input_daemon/sagas';
-import initializeNetworkDaemon from './interfaces/network_daemon/sagas';
-import initializeSurfman from './interfaces/surfman/sagas';
-import initializeUpdatemgr from './interfaces/updatemgr/sagas';
-import initializeUsbDaemon from './interfaces/usb_daemon/sagas';
-import initializeBatteries from './interfaces/xcpmd/sagas';
-import initializeXenmgr from './interfaces/xenmgr/sagas';
-import initializeHost from './interfaces/xenmgr_host/sagas';
-import initializeUi from './interfaces/xenmgr_ui/sagas';
-import initializeVms from './interfaces/xenmgr_vm/sagas';
+import freedesktop from './interfaces/freedesktop';
+import dbusConnect from './dbus';
+import initializeHost from './host/sagas';
+import initializeUsb from './usb/sagas';
+import initializeVms from './vm/sagas';
+import initializeUpdate from './update/sagas';
 
 // outgoing
 // {
@@ -55,46 +48,81 @@ import initializeVms from './interfaces/xenmgr_vm/sagas';
 //     ]
 // }
 
-const isSignal = (action) => (
-  action.type === websocketActions.SOCKET_MESSAGE_RECEIVED
-  && action.data.type === messageTypes.SIGNAL
-);
+const createSignalChannel = (dbus) => eventChannel((emitter) => {
+  dbus.onSignal((signal) => {
+    emitter(signal);
+  });
 
-function* watchSendMessage() {
+  return () => dbus.close();
+});
+
+function* watchSignals(dbus) {
+  const channel = createSignalChannel(dbus);
   while (true) {
-    const { data } = yield take(actions.DBUS_SEND_MESSAGE);
-    yield fork(sendMessage, data);
+    const signal = yield take(channel);
+    yield put({ type: actions.DBUS_SIGNAL_RECEIVED, data: signal });
   }
 }
 
-function* watchSignals() {
+const createErrorChannel = (dbus) => eventChannel((emitter) => {
+  dbus.onError((err) => {
+    emitter(err);
+  });
+
+  return () => dbus.close();
+});
+
+function* watchErrors(dbus) {
+  const channel = createErrorChannel(dbus);
   while (true) {
-    const { data } = yield take(isSignal);
-    yield put({ type: actions.DBUS_SIGNAL_RECEIVED, data });
+    const err = yield take(channel);
+    yield put({ type: actions.DBUS_ERROR_RECEIVED, data: err });
   }
 }
 
-function* initialize() {
-  yield registerSignals();
+function* registerSignals(dbus) {
+  const signalInterfaces = [
+    'com.citrix.xenclient.status_tool',
+    'com.citrix.xenclient.input',
+    'com.citrix.xenclient.networkdomain.notify',
+    'com.citrix.xenclient.networkdaemon.notify',
+    'com.citrix.xenclient.updatemgr',
+    'com.citrix.xenclient.usbdaemon',
+    'com.citrix.xenclient.xcpmd',
+    'com.citrix.xenclient.xenmgr',
+    'com.citrix.xenclient.xenmgr.host',
+    'com.citrix.xenclient.xenmgr.guestreq',
+  ];
+
+  yield all(signalInterfaces.map((iface) => call(dbus.send, freedesktop.addMatch(iface))));
+}
+
+function* initialize(dbus) {
+  yield call(dbus.send, freedesktop.hello());
+  yield registerSignals(dbus);
+
   yield all([
-    initializeInput(),
-    initializeNetworkDaemon(),
-    initializeSurfman(),
-    initializeUpdatemgr(),
-    initializeUsbDaemon(),
-    initializeBatteries(),
-    initializeXenmgr(),
-    initializeHost(),
-    initializeUi(),
-    initializeVms(),
+    initializeHost(dbus),
+    initializeUsb(dbus),
+    initializeVms(dbus),
+    initializeUpdate(dbus),
   ]);
 }
 
 export default function* dbusSaga() {
-  yield take(websocketActions.SOCKET_CONNECTION_READY);
-  yield all([
-    watchSendMessage(),
-    watchSignals(),
-    initialize(),
-  ]);
+  try {
+    const host = process.env.REMOTE_HOST || window.location.hostname;
+    const port = process.env.REMOTE_PORT || 8080;
+    const dbus = yield call(dbusConnect, host, port);
+    yield all([
+      call(watchSignals, dbus),
+      call(watchErrors, dbus),
+      call(initialize, dbus),
+    ]);
+  } catch (err) {
+    yield put({
+      type: actions.DBUS_CONNECTION_ERROR,
+    });
+    console.error(err);
+  }
 }
