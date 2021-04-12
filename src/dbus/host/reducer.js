@@ -3,29 +3,32 @@ import { DEFAULT_WALLPAPERS } from '../interfaces/xenmgr_host';
 
 const initialState = {
   properties: {},
-
-  // host
   cdDevices: [],
   gpuDevices: [],
   isos: [],
-
+  usbDevices: {},
   sound: {
     captureDevices: [],
     playbackDevices: [],
     soundCards: {},
   },
-
+  input: {
+    keyboardLayout: '',
+    keyboardLayouts: [],
+    touchpad: {
+      tapToClickEnabled: false,
+      scrollingEnabled: false,
+      speed: 0,
+    },
+  },
   secondsFromEpoch: 0,
   availableWallpapers: DEFAULT_WALLPAPERS,
-
-  // installer
   eula: null,
   installState: {},
-
-  // powersettings
   power: {
     acLidCloseAction: '',
     batteryLidCloseAction: '',
+    batteries: {},
   },
 };
 
@@ -88,6 +91,15 @@ export default (state = initialState, action) => {
     case actions.HOST_EULA_LOADED: {
       const { eula } = action.data;
       return { ...state, eula };
+    }
+    case actions.HOST_INPUT_LOADED: {
+      const { input } = action.data;
+      return { ...state, input };
+    }
+    case actions.HOST_USB_DEVICE_LOADED: {
+      const { device } = action.data;
+      const usbDevices = { ...state.usbDevices, [device.id]: device };
+      return { ...state, usbDevices };
     }
   }
   return state;

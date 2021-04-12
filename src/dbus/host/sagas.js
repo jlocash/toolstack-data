@@ -5,7 +5,8 @@ import actions from './actions';
 import host, { WALLPAPER_DIR } from '../interfaces/xenmgr_host';
 import ui from '../interfaces/xenmgr_ui';
 import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
-import { signals as usbSignals } from '../interfaces/usb_daemon';
+import input from '../interfaces/input_daemon';
+import usbDaemon, { signals as usbSignals } from '../interfaces/usb_daemon';
 import fixKeys from '../fixKeys';
 import dbusActions from '../actions';
 import { interfaces } from '../constants';
@@ -94,9 +95,7 @@ function* loadCdDevices(dbus) {
   const [cdDevices] = yield call(dbus.send, host.listCdDevices());
   yield put({
     type: actions.HOST_CD_DEVICES_LOADED,
-    data: {
-      cdDevices: cdDevices[0],
-    },
+    data: { cdDevices },
   });
 }
 
@@ -128,9 +127,7 @@ function* loadInstallState(dbus) {
   const [installState] = yield call(dbus.send, host.getInstallstate());
   yield put({
     type: actions.HOST_INSTALL_STATE_LOADED,
-    data: {
-      installState: fixKeys(installState),
-    },
+    data: { installState: fixKeys(installState) },
   });
 }
 
@@ -148,6 +145,64 @@ function* loadEula(dbus) {
     type: actions.HOST_EULA_LOADED,
     data: { eula },
   });
+}
+
+function* loadInput(dbus) {
+  const [
+    tapToClick,
+    scrolling,
+    speed,
+    properties,
+    keyboardLayouts,
+    keyboardLayout,
+    mouseSpeed,
+  ] = yield all([
+    call(dbus.send, input.touchpadGet('tap-to-click-enable')),
+    call(dbus.send, input.touchpadGet('scrolling-enable')),
+    call(dbus.send, input.touchpadGet('speed')),
+    call(dbus.send, input.getAllProperties()),
+    call(dbus.send, input.getKbLayouts()),
+    call(dbus.send, input.getCurrentKbLayout()),
+    call(dbus.send, input.getMouseSpeed()),
+  ]);
+
+  yield put({
+    type: actions.HOST_INPUT_LOADED,
+    data: {
+      input: {
+        touchpad: {
+          tapToClickEnabled: tapToClick[0],
+          scrollingEnabled: scrolling[0],
+          speed: speed[0],
+        },
+        keyboardLayout: keyboardLayout[0],
+        keyboardLayouts: keyboardLayouts[0],
+        properties: fixKeys(properties[0]),
+        mouseSpeed: mouseSpeed[0],
+      },
+    },
+  });
+}
+
+function* loadUsbDevice(dbus, deviceId) {
+  const [name, state, assignedVm, detail] = yield call(dbus.send, usbDaemon.getDeviceInfo(deviceId, ''));
+  yield put({
+    type: actions.HOST_USB_DEVICE_LOADED,
+    data: {
+      device: {
+        id: deviceId,
+        name,
+        state,
+        assignedVm,
+        detail,
+      },
+    },
+  });
+}
+
+function* loadUsbDevices(dbus) {
+  const [deviceIds] = yield call(dbus.send, usbDaemon.listDevices());
+  yield all(deviceIds.map((deviceId) => loadUsbDevice(dbus, deviceId)));
 }
 
 const signalMatcher = (action) => (
@@ -169,6 +224,25 @@ function* signalHandler(dbus, action) {
       yield fork(loadCdDevices, dbus);
       break;
     }
+    case usbSignals.DEVICE_ADDED: {
+      const [deviceId] = signal.args;
+      yield fork(loadUsbDevice, dbus, deviceId);
+      break;
+    }
+    case usbSignals.DEVICE_INFO_CHANGED: {
+      const [deviceId] = signal.args;
+      yield fork(loadUsbDevice, dbus, deviceId);
+      break;
+    }
+    case usbSignals.DEVICES_CHANGED: {
+      yield fork(loadUsbDevices, dbus);
+      break;
+    }
+    case usbSignals.DEVICE_REJECTED: {
+      const [deviceName, reason] = signal.args;
+      console.log(`usb device ${deviceName} rejected: ${reason}`);
+      break;
+    }
   }
 }
 
@@ -184,6 +258,8 @@ function* startWatchers(dbus) {
     takeEvery(actions.HOST_LOAD_ISOS, loadIsos, dbus),
     takeEvery(actions.HOST_LOAD_INSTALL_STATE, loadInstallState, dbus),
     takeEvery(actions.HOST_LOAD_WALLPAPERS, loadWallpapers, dbus),
+    takeEvery(actions.HOST_LOAD_INPUT, loadInput, dbus),
+    takeEvery(actions.HOST_LOAD_USB_DEVICES, loadUsbDevices, dbus),
   ]);
 }
 
@@ -200,5 +276,7 @@ export default function* initialize(dbus) {
     loadInstallState(dbus),
     loadWallpapers(dbus),
     loadEula(dbus),
+    loadInput(dbus),
+    loadUsbDevices(dbus),
   ]);
 }

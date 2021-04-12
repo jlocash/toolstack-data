@@ -6,9 +6,9 @@ import actions from './actions';
 import freedesktop from './interfaces/freedesktop';
 import dbusConnect from './dbus';
 import initializeHost from './host/sagas';
-import initializeUsb from './usb/sagas';
 import initializeVms from './vm/sagas';
 import initializeUpdate from './update/sagas';
+import initializeNdvms from './ndvm/sagas';
 
 // outgoing
 // {
@@ -103,9 +103,9 @@ function* initialize(dbus) {
 
   yield all([
     initializeHost(dbus),
-    initializeUsb(dbus),
     initializeVms(dbus),
     initializeUpdate(dbus),
+    initializeNdvms(dbus),
   ]);
 }
 
