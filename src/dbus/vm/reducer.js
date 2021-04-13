@@ -62,7 +62,7 @@ export default (state = initialState, action) => {
       const properties = {
         ...state[vmPath].properties,
         state: vmState,
-        acpi_state: vmAcpiState,
+        acpiState: vmAcpiState,
       };
       return { ...state, [vmPath]: { ...state[vmPath], properties } };
     }

@@ -35,6 +35,18 @@ export const methods = {
   REMOVE_VAR: 'remove_var',
 };
 
+export const signals = {
+  AC_ADAPTER_STATE_CHANGED: 'ac_adapter_state_changed',
+  BATTERY_INFO_CHANGED: 'battery_info_changed',
+  BATTERY_LEVEL_NOTIFICATION: 'battery_level_notification',
+  BATTERY_STATUS_CHANGED: 'battery_status_changed',
+  BCL_KEY_PRESSED: 'bcl_key_pressed',
+  NUM_BATTERIES_CHANGED: 'num_batteries_changed',
+  OEM_EVENT_TRIGGERED: 'oem_event_triggered',
+  POWER_BUTTON_PRESSED: 'power_button_pressed',
+  SLEEP_BUTTON_PRESSED: 'sleep_button_pressed',
+};
+
 const path = '/';
 
 const xcpmd = (method, ...args) => buildMessage(

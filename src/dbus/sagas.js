@@ -9,6 +9,7 @@ import initializeHost from './host/sagas';
 import initializeVms from './vm/sagas';
 import initializeUpdate from './update/sagas';
 import initializeNdvms from './ndvm/sagas';
+import initializeBatteries from './battery/sagas';
 
 // outgoing
 // {
@@ -106,6 +107,7 @@ function* initialize(dbus) {
     initializeVms(dbus),
     initializeUpdate(dbus),
     initializeNdvms(dbus),
+    initializeBatteries(dbus),
   ]);
 }
 
