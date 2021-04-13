@@ -1,5 +1,5 @@
 import {
-  all, call, fork, put, takeEvery,
+  all, call, fork, put, take, takeEvery,
 } from 'redux-saga/effects';
 import networkDaemon, { signals as networkDaemonSignals } from '../interfaces/network_daemon';
 import networkDomain, { signals as networkDomainSignals } from '../interfaces/network_domain';
@@ -86,9 +86,25 @@ function* signalHandler(dbus, action) {
   }
 }
 
+function* watchLoadNdvmProperties(dbus) {
+  while (true) {
+    const action = yield take(actions.NDVM_LOAD_PROPERTIES);
+    yield fork(loadNdvmProperties, dbus, action.data.ndvmPath);
+  }
+}
+
+function* watchLoadNdvmNetworks(dbus) {
+  while (true) {
+    const action = yield take(actions.NDVM_LOAD_NETWORKS);
+    yield fork(loadNdvmNetworks, dbus, action.data.ndvmPath);
+  }
+}
+
 function* startWatchers(dbus) {
   yield all([
     takeEvery(signalMatcher, signalHandler, dbus),
+    watchLoadNdvmProperties(dbus),
+    watchLoadNdvmNetworks(dbus),
   ]);
 }
 

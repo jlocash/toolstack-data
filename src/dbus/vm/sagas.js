@@ -1,5 +1,5 @@
 import {
-  all, call, fork, put, takeEvery,
+  all, call, fork, put, take, takeEvery,
 } from 'redux-saga/effects';
 import actions from './actions';
 import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
@@ -122,6 +122,62 @@ function* loadVms(dbus) {
   yield all(vmPaths.map((vmPath) => loadVm(dbus, vmPath)));
 }
 
+function* watchLoadProperties(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_PROPERTIES);
+    yield fork(loadProperties, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadArgoFirewallRules(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_ARGO_FIREWALL_RULES);
+    yield fork(loadArgoFirewallRules, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadPtPciDevices(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_PT_PCI_DEVICES);
+    yield fork(loadPtPciDevices, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadPtRules(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_PT_RULES);
+    yield fork(loadPtRules, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadNetFirewallRules(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_NET_FIREWALL_RULES);
+    yield fork(loadNetFirewallRules, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadProductProperties(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_PRODUCT_PROPERTIES);
+    yield fork(loadProductProperties, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadVmNics(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_NICS);
+    yield fork(loadVmNics, dbus, action.data.vmPath);
+  }
+}
+
+function* watchLoadVmDisks(dbus) {
+  while (true) {
+    const action = yield take(actions.VM_LOAD_DISKS);
+    yield fork(loadVmDisks, dbus, action.data.vmPath);
+  }
+}
+
 const signalMatcher = (action) => (
   action.type === dbusActions.DBUS_SIGNAL_RECEIVED
   && action.data.signal.interface === interfaces.XENMGR
@@ -172,6 +228,14 @@ function* signalHandler(dbus, action) {
 function* startWatchers(dbus) {
   yield all([
     takeEvery(signalMatcher, signalHandler, dbus),
+    watchLoadProperties(dbus),
+    watchLoadArgoFirewallRules(dbus),
+    watchLoadPtPciDevices(dbus),
+    watchLoadPtRules(dbus),
+    watchLoadNetFirewallRules(dbus),
+    watchLoadProductProperties(dbus),
+    watchLoadVmNics(dbus),
+    watchLoadVmDisks(dbus),
   ]);
 }
 

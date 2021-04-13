@@ -210,7 +210,7 @@ const signalMatcher = (action) => (
   && [
     interfaces.HOST,
     interfaces.USB_DAEMON,
-  ].includes(action.data.interface)
+  ].includes(action.data.signal.interface)
 );
 
 function* signalHandler(dbus, action) {
