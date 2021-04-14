@@ -1,4 +1,0 @@
-({
-    // Layout
-    HEADER: "CD-ROMs"
-})
