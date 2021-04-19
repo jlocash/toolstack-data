@@ -81,7 +81,15 @@ function* watchErrors(dbus) {
   }
 }
 
-function* registerSignals(dbus) {
+function* registerSignals(dbus, iface) {
+  yield call(dbus.send, freedesktop.addMatch(iface));
+  yield put({
+    type: actions.DBUS_SIGNALS_REGISTERED,
+    data: { interface: iface },
+  });
+}
+
+function* initialize(dbus) {
   const signalInterfaces = [
     'com.citrix.xenclient.status_tool',
     'com.citrix.xenclient.input',
@@ -95,12 +103,8 @@ function* registerSignals(dbus) {
     'com.citrix.xenclient.xenmgr.guestreq',
   ];
 
-  yield all(signalInterfaces.map((iface) => call(dbus.send, freedesktop.addMatch(iface))));
-}
-
-function* initialize(dbus) {
   yield call(dbus.send, freedesktop.hello());
-  yield registerSignals(dbus);
+  yield all(signalInterfaces.map((iface) => registerSignals(dbus, iface)));
 
   yield all([
     initializeHost(dbus),
@@ -116,6 +120,10 @@ export default function* dbusSaga() {
     const host = process.env.REMOTE_HOST || window.location.hostname;
     const port = process.env.REMOTE_PORT || 8080;
     const dbus = yield call(dbusConnect, host, port);
+    yield put({
+      type: actions.DBUS_CONNECTION_ESTABLISHED,
+      data: { url: dbus.socket.url },
+    });
     yield all([
       call(watchSignals, dbus),
       call(watchErrors, dbus),
