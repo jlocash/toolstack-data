@@ -5,7 +5,7 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case actions.NDVM_PROPERTIES_LOADED: {
       const { ndvmPath, properties } = action.data;
-      const ndvmState = { ...state[ndvmPath], properties };
+      const ndvmState = { ...state[ndvmPath], ...properties };
       return { ...state, [ndvmPath]: ndvmState };
     }
     case actions.NDVM_NETWORK_LOADED: {

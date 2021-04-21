@@ -7,7 +7,13 @@ import xcpmd, { signals as xcpmdSignals } from '../interfaces/xcpmd';
 import actions from './actions';
 
 function* loadBattery(dbus, batteryId) {
-  const [present, timeToEmpty, timeToFull, state, percentage] = yield all([
+  const [
+    [present],
+    [timeToEmpty],
+    [timeToFull],
+    [state],
+    [percentage],
+  ] = yield all([
     call(dbus.send, xcpmd.batteryIsPresent(batteryId)),
     call(dbus.send, xcpmd.batteryTimeToEmpty(batteryId)),
     call(dbus.send, xcpmd.batteryTimeToFull(batteryId)),
@@ -20,11 +26,11 @@ function* loadBattery(dbus, batteryId) {
     data: {
       battery: {
         id: batteryId,
-        present: present[0],
-        timeToEmpty: timeToEmpty[0],
-        timeToFull: timeToFull[0],
-        percentage: percentage[0],
-        state: state[0],
+        present,
+        timeToEmpty,
+        timeToFull,
+        percentage,
+        state,
       },
     },
   });

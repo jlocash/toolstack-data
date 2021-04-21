@@ -2,7 +2,6 @@ import actions from './actions';
 import { DEFAULT_WALLPAPERS } from '../interfaces/xenmgr_host';
 
 const initialState = {
-  properties: {},
   cdDevices: [],
   gpuDevices: [],
   isos: [],
@@ -36,7 +35,7 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case actions.HOST_PROPERTIES_LOADED: {
       const { properties } = action.data;
-      return { ...state, properties };
+      return { ...state, ...properties };
     }
     case actions.HOST_POWER_LOADED: {
       const { power } = action.data;
@@ -103,8 +102,7 @@ export default (state = initialState, action) => {
     }
     case actions.HOST_STATE_UPDATED: {
       const { newState } = action.data;
-      const properties = { ...state.properties, state: newState };
-      return { ...state, properties };
+      return { ...state, state: newState };
     }
   }
   return state;

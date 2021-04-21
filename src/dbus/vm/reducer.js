@@ -1,17 +1,28 @@
 import actions from './actions';
 
-const initialState = {};
-export default (state = initialState, action) => {
+const initialVmState = {
+  loaded: false,
+};
+
+export default (state = {}, action) => {
   switch (action.type) {
+    case actions.VM_PATH_ACQUIRED: {
+      const { vmPath } = action.data;
+      return { ...state, [vmPath]: initialVmState };
+    }
+    case actions.VM_LOADED: {
+      const { vmPath } = action.data;
+      const vmState = { ...state[vmPath], loaded: true };
+      return { ...state, [vmPath]: vmState };
+    }
     case actions.VM_PROPERTIES_LOADED: {
       const { vmPath, properties } = action.data;
-      const vmState = { ...state[vmPath], properties };
+      const vmState = { ...state[vmPath], ...properties };
       return { ...state, [vmPath]: vmState };
     }
     case actions.VM_PROPERTY_LOADED: {
       const { vmPath, prop, value } = action.data;
-      const properties = { ...state[vmPath].properties, [prop]: value };
-      const vmState = { ...state[vmPath], properties };
+      const vmState = { ...state[vmPath], [prop]: value };
       return { ...state, [vmPath]: vmState };
     }
     case actions.VM_ARGO_FIREWALL_RULES_LOADED: {

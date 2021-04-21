@@ -3,15 +3,15 @@ import {
 } from 'redux-saga/effects';
 import actions from './actions';
 import updatemgr, { signals } from '../interfaces/updatemgr';
-import fixKeys from '../fixKeys';
+import { fixKeys } from '../fixKeys';
 import dbusActions from '../actions';
 import { interfaces } from '../constants';
 
-function* loadProperties(dbus) {
+function* load(dbus) {
   const [properties] = yield call(dbus.send, updatemgr.getAllProperties());
   yield put({
-    type: actions.UPDATE_PROPERTIES_LOADED,
-    data: { properties: fixKeys(properties) },
+    type: actions.UPDATE_LOADED,
+    data: { ...fixKeys(properties) },
   });
 }
 
@@ -25,7 +25,7 @@ function* signalHandler(dbus, action) {
   switch (signal.member) {
     case signals.UPDATE_STATE_CHANGE:
     case signals.UPDATE_DOWNLOAD_PROGRESS: {
-      yield fork(loadProperties, dbus);
+      yield fork(load, dbus);
     }
   }
 }
@@ -33,13 +33,13 @@ function* signalHandler(dbus, action) {
 function* startWatchers(dbus) {
   yield all([
     takeEvery(signalMatcher, signalHandler, dbus),
-    takeEvery(actions.UPDATE_LOAD_PROPERTIES, loadProperties, dbus),
+    takeEvery(actions.UPDATE_LOAD, load, dbus),
   ]);
 }
 
 export default function* initialize(dbus) {
   yield all([
     startWatchers(dbus),
-    loadProperties(dbus),
+    load(dbus),
   ]);
 }

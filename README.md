@@ -1,10 +1,3 @@
-<!--
- Copyright (c) 2021 josh
- 
- This software is released under the MIT License.
- https://opensource.org/licenses/MIT
--->
-
 # OpenXT User Interface
 This repo contains the source code of the OpenXT User Interface.
 

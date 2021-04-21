@@ -6,7 +6,7 @@ import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
 import vm from '../interfaces/xenmgr_vm';
 import vmDisk from '../interfaces/vm_disk';
 import vmNic from '../interfaces/vm_nic';
-import fixKeys from '../fixKeys';
+import { fixKeys, toCamelCase } from '../fixKeys';
 import dbusActions from '../actions';
 import { interfaces } from '../constants';
 
@@ -14,7 +14,11 @@ function* loadProperty(dbus, vmPath, prop) {
   const [value] = yield call(dbus.send, vm.getProperty(vmPath, prop));
   yield put({
     type: actions.VM_PROPERTY_LOADED,
-    data: { vmPath, prop, value },
+    data: {
+      vmPath,
+      value,
+      prop: toCamelCase(prop),
+    },
   });
 }
 
@@ -74,7 +78,7 @@ function* loadVmNic(dbus, vmPath, nicPath) {
       vmPath,
       nic: {
         path: nicPath.replace(vmPath, ''),
-        properties: fixKeys(properties),
+        ...fixKeys(properties),
       },
     },
   });
@@ -93,7 +97,7 @@ function* loadVmDisk(dbus, vmPath, diskPath) {
       vmPath,
       disk: {
         path: diskPath.replace(vmPath, ''),
-        properties: fixKeys(properties),
+        ...fixKeys(properties),
       },
     },
   });
@@ -105,6 +109,7 @@ function* loadVmDisks(dbus, vmPath) {
 }
 
 function* loadVm(dbus, vmPath) {
+  yield put({ type: actions.VM_PATH_ACQUIRED, data: { vmPath } });
   yield all([
     loadProperties(dbus, vmPath),
     loadArgoFirewallRules(dbus, vmPath),
@@ -115,6 +120,7 @@ function* loadVm(dbus, vmPath) {
     loadVmNics(dbus, vmPath),
     loadVmDisks(dbus, vmPath),
   ]);
+  yield put({ type: actions.VM_LOADED, data: { vmPath } });
 }
 
 function* loadVms(dbus) {

@@ -7,12 +7,16 @@ import ui from '../interfaces/xenmgr_ui';
 import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
 import input from '../interfaces/input_daemon';
 import usbDaemon, { signals as usbSignals } from '../interfaces/usb_daemon';
-import fixKeys from '../fixKeys';
+import { fixKeys } from '../fixKeys';
 import dbusActions from '../actions';
 import { interfaces } from '../constants';
 
 function* loadProperties(dbus) {
-  const [hostProperties, uiProperties, xenmgrProperties] = yield all([
+  const [
+    [hostProperties],
+    [uiProperties],
+    [xenmgrProperties],
+  ] = yield all([
     call(dbus.send, host.getAllProperties()),
     call(dbus.send, ui.getAllProperties()),
     call(dbus.send, xenmgr.getAllProperties()),
@@ -22,9 +26,9 @@ function* loadProperties(dbus) {
     type: actions.HOST_PROPERTIES_LOADED,
     data: {
       properties: {
-        ...fixKeys(hostProperties[0]),
-        ...fixKeys(uiProperties[0]),
-        ...fixKeys(xenmgrProperties[0]),
+        ...fixKeys(hostProperties),
+        ...fixKeys(uiProperties),
+        ...fixKeys(xenmgrProperties),
       },
     },
   });
@@ -35,7 +39,7 @@ function* loadCaptureDevices(dbus) {
   yield put({
     type: actions.HOST_SOUND_CAPTURE_DEVICES_LOADED,
     data: {
-      captureDevices: captureDevices[0],
+      captureDevices,
     },
   });
 }
@@ -45,7 +49,7 @@ function* loadPlaybackDevices(dbus) {
   yield put({
     type: actions.HOST_SOUND_PLAYBACK_DEVICES_LOADED,
     data: {
-      playbackDevices: playbackDevices[0],
+      playbackDevices,
     },
   });
 }
@@ -57,7 +61,7 @@ function* loadSoundCard(dbus, soundCard) {
     data: {
       soundCard: {
         ...soundCard,
-        controls: controls[0],
+        controls,
       },
     },
   });
@@ -77,7 +81,10 @@ function* loadSound(dbus) {
 }
 
 function* loadPower(dbus) {
-  const [acLidCloseAction, batLidCloseAction] = yield all([
+  const [
+    [acLidCloseAction],
+    [batteryLidCloseAction],
+  ] = yield all([
     call(dbus.send, host.getAcLidCloseAction()),
     call(dbus.send, host.getBatteryLidCloseAction()),
   ]);
@@ -85,8 +92,8 @@ function* loadPower(dbus) {
   yield put({
     type: actions.HOST_POWER_LOADED,
     data: {
-      acLidCloseAction: acLidCloseAction[0],
-      batteryLidCloseAction: batLidCloseAction[0],
+      acLidCloseAction,
+      batteryLidCloseAction,
     },
   });
 }
@@ -149,13 +156,13 @@ function* loadEula(dbus) {
 
 function* loadInput(dbus) {
   const [
-    tapToClick,
-    scrolling,
-    speed,
-    properties,
-    keyboardLayouts,
-    keyboardLayout,
-    mouseSpeed,
+    [tapToClick],
+    [scrollingEnabled],
+    [speed],
+    [properties],
+    [keyboardLayouts],
+    [keyboardLayout],
+    [mouseSpeed],
   ] = yield all([
     call(dbus.send, input.touchpadGet('tap-to-click-enable')),
     call(dbus.send, input.touchpadGet('scrolling-enable')),
@@ -171,14 +178,14 @@ function* loadInput(dbus) {
     data: {
       input: {
         touchpad: {
-          tapToClickEnabled: tapToClick[0],
-          scrollingEnabled: scrolling[0],
-          speed: speed[0],
+          tapToClick,
+          scrollingEnabled,
+          speed,
         },
-        keyboardLayout: keyboardLayout[0],
-        keyboardLayouts: keyboardLayouts[0],
-        properties: fixKeys(properties[0]),
-        mouseSpeed: mouseSpeed[0],
+        keyboardLayout,
+        keyboardLayouts,
+        properties: fixKeys(properties),
+        mouseSpeed,
       },
     },
   });

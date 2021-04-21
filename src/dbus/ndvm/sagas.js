@@ -5,7 +5,7 @@ import networkDaemon, { signals as networkDaemonSignals } from '../interfaces/ne
 import networkDomain, { signals as networkDomainSignals } from '../interfaces/network_domain';
 import network from '../interfaces/network';
 import actions from './actions';
-import fixKeys from '../fixKeys';
+import { fixKeys } from '../fixKeys';
 import dbusActions from '../actions';
 import { interfaces } from '../constants';
 
@@ -17,7 +17,7 @@ function* loadNdvmNetwork(dbus, ndvmPath, networkPath) {
       ndvmPath,
       network: {
         path: networkPath,
-        properties: fixKeys(properties),
+        ...fixKeys(properties),
       },
     },
   });

@@ -1,4 +1,4 @@
-const toCamelCase = (s, delim) => {
+export const toCamelCase = (s, delim) => {
   let index = s.indexOf(delim);
   let result = s;
   while (index >= 0) {
@@ -13,7 +13,7 @@ const toCamelCase = (s, delim) => {
   return result;
 };
 
-export default (obj) => {
+export const fixKeys = (obj) => {
   const newObj = {};
   Object.keys(obj).forEach((key) => {
     // newObj[key.replace(/-/g, '_')] = obj[key];
