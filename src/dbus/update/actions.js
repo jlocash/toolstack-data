@@ -1,4 +1,0 @@
-export default {
-  UPDATE_LOAD: 'UPDATE_LOAD',
-  UPDATE_LOADED: 'UPDATE_LOADED',
-};
