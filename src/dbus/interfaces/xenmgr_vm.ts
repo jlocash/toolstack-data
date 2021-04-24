@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type VMProperties = {
@@ -271,240 +271,244 @@ export type PCIRule = {
 };
 
 export default {
-  getProperty: (vmPath: string, name: string): Message => buildMessage(
+  getProperty: (vmPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.VM, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (vmPath: string): Message => buildMessage(
+  getAllProperties: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.VM,
   ),
-  setProperty: (vmPath: string, name: string, value: string): Message => buildMessage(
+  setProperty: (vmPath: string, name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Set',
     interfaces.VM, name.replace(/_/g, '-'), value,
   ),
-  addArgoFirewallRule: (vmPath: string, rule: string): Message => buildMessage(
+  addArgoFirewallRule: (vmPath: string, rule: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'add_argo_firewall_rule',
     rule,
   ),
-  addDisk: (vmPath: string): Message => buildMessage(
+  addDisk: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'add_disk',
   ),
   addNetFirewallRule: (vmPath: string, id: number, direction: string,
-    remoteIp: string, extra: string): Message => buildMessage(
+    remoteIp: string, extra: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'add_net_firewall_rule',
     id, direction, remoteIp, extra,
   ),
-  addNic: (vmPath: string): Message => buildMessage(
+  addNic: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'add_nic',
   ),
-  createChildServiceVm: (vmPath: string, template: string): Message => buildMessage(
+  createChildServiceVm: (vmPath: string, template: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'create_child_service_vm',
     template,
   ),
-  delete: (vmPath: string): Message => buildMessage(
+  delete: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'delete',
   ),
-  deleteArgoFirewallRule: (vmPath: string, rule: string): Message => buildMessage(
+  deleteArgoFirewallRule: (vmPath: string, rule: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'delete_argo_firewall_rule',
     rule,
   ),
-  deleteNetFirewallRule: (vmPath: string, id: number): Message => buildMessage(
+  deleteNetFirewallRule: (vmPath: string, id: number): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'delete_net_firewall_rule',
     id,
   ),
-  destroy: (vmPath: string): Message => buildMessage(
+  destroy: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'destroy',
   ),
-  getDbKey: (vmPath: string, key: string): Message => buildMessage(
+  getDbKey: (vmPath: string, key: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'get_db_key',
     key,
   ),
-  getDomstoreKey: (vmPath: string, key: string): Message => buildMessage(
+  getDomstoreKey: (vmPath: string, key: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'get_domstore_key',
     key,
   ),
-  hibernate: (vmPath: string): Message => buildMessage(
+  hibernate: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'hibernate',
   ),
-  listArgoFirewallRules: (vmPath: string): Message => buildMessage(
+  listArgoFirewallRules: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'list_argo_firewall_rules',
   ),
-  listDisks: (vmPath: string): Message => buildMessage(
+  listDisks: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'list_disks',
   ),
-  listNetFirewallRules: (vmPath: string): Message => buildMessage(
+  listNetFirewallRules: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'list_net_firewall_rules',
   ),
-  listNics: (vmPath: string): Message => buildMessage(
+  listNics: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'list_nics',
   ),
-  pause: (vmPath: string): Message => buildMessage(
+  pause: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'pause',
   ),
-  readIcon: (vmPath: string): Message => buildMessage(
+  readIcon: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'read_icon',
   ),
-  reboot: (vmPath: string): Message => buildMessage(
+  reboot: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'reboot',
   ),
-  resume: (vmPath: string): Message => buildMessage(
+  resume: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'resume',
   ),
-  resumeFromFile: (vmPath: string, file: string): Message => buildMessage(
+  resumeFromFile: (vmPath: string, file: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'resume_from_file',
     file,
   ),
-  setDbKey: (vmPath: string, key: string, value: string): Message => buildMessage(
+  setDbKey: (vmPath: string, key: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'set_db_key',
     key, value,
   ),
-  setDomstoreKey: (vmPath: string, key: string, value: string): Message => buildMessage(
+  setDomstoreKey: (
+    vmPath: string,
+    key: string,
+    value: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'set_domstore_key',
     key, value,
   ),
-  shutdown: (vmPath: string): Message => buildMessage(
+  shutdown: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'shutdown',
   ),
-  sleep: (vmPath: string): Message => buildMessage(
+  sleep: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'sleep',
   ),
-  start: (vmPath: string): Message => buildMessage(
+  start: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'start',
   ),
-  startInternal: (vmPath: string): Message => buildMessage(
+  startInternal: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'start_internal',
   ),
-  suspendToFile: (vmPath: string, file: string): Message => buildMessage(
+  suspendToFile: (vmPath: string, file: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'suspend_to_file',
     file,
   ),
-  switch: (vmPath: string): Message => buildMessage(
+  switch: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'switch',
   ),
-  unpause: (vmPath: string): Message => buildMessage(
+  unpause: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM,
     'unpause',
   ),
-  auth: (vmPath: string): Message => buildMessage(
+  auth: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_AUTH,
     'auth',
   ),
-  authRequired: (vmPath: string): Message => buildMessage(
+  authRequired: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_AUTH,
     'auth_required',
   ),
   addPtRule: (vmPath: string, pciClass: string, vendorId: string,
-    deviceId: string): Message => buildMessage(
+    deviceId: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
     'add_pt_rule',
     pciClass, vendorId, deviceId,
   ),
-  addPtRuleBdf: (vmPath: string, bdf: string): Message => buildMessage(
+  addPtRuleBdf: (vmPath: string, bdf: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
@@ -512,73 +516,81 @@ export default {
     bdf,
   ),
   deletePtRule: (vmPath: string, pciClass: string, vendorId: string,
-    deviceId: string): Message => buildMessage(
+    deviceId: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
     'delete_pt_rule',
     pciClass, vendorId, deviceId,
   ),
-  deletePtRuleBdf: (vmPath: string, bdf: string): Message => buildMessage(
+  deletePtRuleBdf: (vmPath: string, bdf: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
     'delete_pt_rule_bdf',
     bdf,
   ),
-  listPtPciDevices: (vmPath: string): Message => buildMessage(
+  listPtPciDevices: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
     'list_pt_pci_devices',
   ),
-  listPtRules: (vmPath: string): Message => buildMessage(
+  listPtRules: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PCI,
     'list_pt_rules',
   ),
-  getOvfEnvXml: (vmPath: string): Message => buildMessage(
+  getOvfEnvXml: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PRODUCT,
     'get_ovf_env_xml',
   ),
-  getProductProperty: (vmPath: string, propertyId: string): Message => buildMessage(
+  getProductProperty: (vmPath: string, propertyId: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PRODUCT,
     'get_product_property',
     propertyId,
   ),
-  listProductProperties: (vmPath: string): Message => buildMessage(
+  listProductProperties: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PRODUCT,
     'list_product_properties',
   ),
-  setProductProperty: (vmPath: string, propertyId: string, value: string): Message => buildMessage(
+  setProductProperty: (
+    vmPath: string,
+    propertyId: string,
+    value: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.VM_PRODUCT,
     'set_product_property',
     propertyId, value,
   ),
-  unrestrictedGetProperty: (vmPath: string, name: string): Message => buildMessage(
+  unrestrictedGetProperty: (vmPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.VM_UNRESTRICTED, name.replace(/_/g, '-'),
   ),
-  unrestrictedGetAllProperties: (vmPath: string): Message => buildMessage(
+  unrestrictedGetAllProperties: (vmPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.VM_UNRESTRICTED,
   ),
-  unrestrictedSetProperty: (vmPath: string, name: string, value: string): Message => buildMessage(
+  unrestrictedSetProperty: (
+    vmPath: string,
+    name: string,
+    value: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     vmPath,
     interfaces.FREEDESKTOP_PROPERTIES,

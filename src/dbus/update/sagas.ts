@@ -2,18 +2,15 @@ import {
   all, call, fork, put, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
-import type { DBus, Signal } from '../dbus';
+import * as DBus from '../dbus';
 import { actions } from './slice';
 import updatemgr, { signals, UpdatemgrProperties } from '../interfaces/updatemgr';
 import { translate } from '../utils';
 import { actions as dbusActions } from '../slice';
 import { interfaces } from '../constants';
 
-function* load(dbus: DBus) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    updatemgr.getAllProperties(),
-  );
+function* load() {
+  const [properties]: [Record<string, unknown>] = yield call(updatemgr.getAllProperties);
   yield put(actions.loaded(translate<UpdatemgrProperties>(properties)));
 }
 
@@ -22,27 +19,27 @@ const signalMatcher = (action: Action) => (
   && action.payload.signal.interface === interfaces.UPDATEMGR
 );
 
-function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
+function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
     case signals.UPDATE_STATE_CHANGE:
     case signals.UPDATE_DOWNLOAD_PROGRESS: {
-      yield fork(load, dbus);
+      yield fork(load);
     }
   }
 }
 
-function* startWatchers(dbus: DBus) {
+function* startWatchers() {
   yield all([
-    takeEvery(signalMatcher, signalHandler, dbus),
-    takeEvery(actions.load().type, load, dbus),
+    takeEvery(signalMatcher, signalHandler),
+    takeEvery(actions.load().type, load),
   ]);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function* initialize(dbus: DBus) {
+export default function* initialize() {
   yield all([
-    startWatchers(dbus),
-    load(dbus),
+    startWatchers(),
+    load(),
   ]);
 }

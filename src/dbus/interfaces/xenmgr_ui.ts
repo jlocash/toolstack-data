@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type UIProperties = {
@@ -28,21 +28,21 @@ export type UIProperties = {
 };
 
 export default {
-  getProperty: (name: string): Message => buildMessage(
+  getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.UI_CONFIG, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (): Message => buildMessage(
+  getAllProperties: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.UI_CONFIG,
   ),
-  setProperty: (name: string, value: string): Message => buildMessage(
+  setProperty: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,

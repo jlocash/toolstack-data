@@ -2,7 +2,7 @@ import {
   all, call, fork, put, take, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
-import type { DBus, Signal } from '../dbus';
+import * as DBus from '../dbus';
 import { actions } from './slice';
 import xenmgr, { signals as xenmgrSignals } from '../interfaces/xenmgr';
 import vm, { PCIRule, VMProperties } from '../interfaces/xenmgr_vm';
@@ -13,8 +13,8 @@ import { actions as dbusActions } from '../slice';
 import { interfaces } from '../constants';
 import { PCIDevice } from '../interfaces/xenmgr_host';
 
-function* loadProperty(dbus: DBus, vmPath: string, prop: keyof VMProperties) {
-  const [value]: string[] = yield call(dbus.send, vm.getProperty(vmPath, prop));
+function* loadProperty(vmPath: string, prop: keyof VMProperties) {
+  const [value]: string[] = yield call(vm.getProperty, vmPath, prop);
   yield put(actions.propertyLoaded({
     vmPath,
     prop,
@@ -22,44 +22,38 @@ function* loadProperty(dbus: DBus, vmPath: string, prop: keyof VMProperties) {
   }));
 }
 
-function* loadProperties(dbus: DBus, vmPath: string) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    vm.getAllProperties(vmPath),
-  );
+function* loadProperties(vmPath: string) {
+  const [properties]: [Record<string, unknown>] = yield call(vm.getAllProperties, vmPath);
   yield put(actions.propertiesLoaded({ vmPath, properties: translate<VMProperties>(properties) }));
 }
 
-function* loadArgoFirewallRules(dbus: DBus, vmPath: string) {
-  const [argoFirewallRules]: string[][] = yield call(dbus.send, vm.listArgoFirewallRules(vmPath));
+function* loadArgoFirewallRules(vmPath: string) {
+  const [argoFirewallRules]: string[][] = yield call(vm.listArgoFirewallRules, vmPath);
   yield put(actions.argoFirewallRulesLoaded({ vmPath, argoFirewallRules }));
 }
 
-function* loadPtPciDevices(dbus: DBus, vmPath: string) {
-  const [ptPciDevices]: PCIDevice[][] = yield call(dbus.send, vm.listPtPciDevices(vmPath));
+function* loadPtPciDevices(vmPath: string) {
+  const [ptPciDevices]: PCIDevice[][] = yield call(vm.listPtPciDevices, vmPath);
   yield put(actions.ptPciDevicesLoaded({ vmPath, ptPciDevices }));
 }
 
-function* loadPtRules(dbus: DBus, vmPath: string) {
-  const [ptRules]: PCIRule[][] = yield call(dbus.send, vm.listPtRules(vmPath));
+function* loadPtRules(vmPath: string) {
+  const [ptRules]: PCIRule[][] = yield call(vm.listPtRules, vmPath);
   yield put(actions.ptRulesLoaded({ vmPath, ptRules }));
 }
 
-function* loadNetFirewallRules(dbus: DBus, vmPath: string) {
-  const [netFirewallRules]: unknown[][] = yield call(dbus.send, vm.listNetFirewallRules(vmPath));
+function* loadNetFirewallRules(vmPath: string) {
+  const [netFirewallRules]: unknown[][] = yield call(vm.listNetFirewallRules, vmPath);
   yield put(actions.netFirewallRulesLoaded({ vmPath, netFirewallRules }));
 }
 
-function* loadProductProperties(dbus: DBus, vmPath: string) {
-  const [productProperties]: unknown[][] = yield call(dbus.send, vm.listProductProperties(vmPath));
+function* loadProductProperties(vmPath: string) {
+  const [productProperties]: unknown[][] = yield call(vm.listProductProperties, vmPath);
   yield put(actions.productPropertiesLoaded({ vmPath, productProperties }));
 }
 
-function* loadVmNic(dbus: DBus, vmPath: string, nicPath: string) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    vmNic.getAllProperties(nicPath),
-  );
+function* loadVmNic(vmPath: string, nicPath: string) {
+  const [properties]: [Record<string, unknown>] = yield call(vmNic.getAllProperties, nicPath);
   yield put(actions.nicLoaded({
     vmPath,
     nic: {
@@ -69,16 +63,13 @@ function* loadVmNic(dbus: DBus, vmPath: string, nicPath: string) {
   }));
 }
 
-function* loadVmNics(dbus: DBus, vmPath: string) {
-  const [nicPaths]: [[string]] = yield call(dbus.send, vm.listNics(vmPath));
-  yield all(nicPaths.map((nicPath) => loadVmNic(dbus, vmPath, nicPath)));
+function* loadVmNics(vmPath: string) {
+  const [nicPaths]: [[string]] = yield call(vm.listNics, vmPath);
+  yield all(nicPaths.map((nicPath) => loadVmNic(vmPath, nicPath)));
 }
 
-function* loadVmDisk(dbus: DBus, vmPath: string, diskPath: string) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    vmDisk.getAllProperties(diskPath),
-  );
+function* loadVmDisk(vmPath: string, diskPath: string) {
+  const [properties]: [Record<string, unknown>] = yield call(vmDisk.getAllProperties, diskPath);
   yield put(actions.diskLoaded({
     vmPath,
     disk: {
@@ -88,90 +79,90 @@ function* loadVmDisk(dbus: DBus, vmPath: string, diskPath: string) {
   }));
 }
 
-function* loadVmDisks(dbus: DBus, vmPath: string) {
-  const [diskPaths]: [[string]] = yield call(dbus.send, vm.listDisks(vmPath));
-  yield all(diskPaths.map((diskPath) => loadVmDisk(dbus, vmPath, diskPath)));
+function* loadVmDisks(vmPath: string) {
+  const [diskPaths]: [[string]] = yield call(vm.listDisks, vmPath);
+  yield all(diskPaths.map((diskPath) => loadVmDisk(vmPath, diskPath)));
 }
 
-function* loadVm(dbus: DBus, vmPath: string) {
+function* loadVm(vmPath: string) {
   yield put(actions.pathAcquired({ vmPath }));
   yield all([
-    loadProperties(dbus, vmPath),
-    loadArgoFirewallRules(dbus, vmPath),
-    loadPtPciDevices(dbus, vmPath),
-    loadPtRules(dbus, vmPath),
-    loadNetFirewallRules(dbus, vmPath),
-    loadProductProperties(dbus, vmPath),
-    loadVmNics(dbus, vmPath),
-    loadVmDisks(dbus, vmPath),
+    loadProperties(vmPath),
+    loadArgoFirewallRules(vmPath),
+    loadPtPciDevices(vmPath),
+    loadPtRules(vmPath),
+    loadNetFirewallRules(vmPath),
+    loadProductProperties(vmPath),
+    loadVmNics(vmPath),
+    loadVmDisks(vmPath),
   ]);
   yield put(actions.loaded({ vmPath }));
 }
 
-function* loadVms(dbus: DBus) {
-  const [vmPaths]: string[][] = yield call(dbus.send, xenmgr.listVms());
-  yield all(vmPaths.map((vmPath) => loadVm(dbus, vmPath)));
+function* loadVms() {
+  const [vmPaths]: string[][] = yield call(xenmgr.listVms);
+  yield all(vmPaths.map((vmPath) => loadVm(vmPath)));
 }
 
-function* watchLoadProperties(dbus: DBus) {
+function* watchLoadProperties() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(actions.loadProperties.match);
-    yield fork(loadProperties, dbus, action.payload.vmPath);
+    yield fork(loadProperties, action.payload.vmPath);
   }
 }
 
-function* watchLoadArgoFirewallRules(dbus: DBus) {
+function* watchLoadArgoFirewallRules() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(
       actions.loadArgoFirewallRules.match,
     );
-    yield fork(loadArgoFirewallRules, dbus, action.payload.vmPath);
+    yield fork(loadArgoFirewallRules, action.payload.vmPath);
   }
 }
 
-function* watchLoadPtPciDevices(dbus: DBus) {
+function* watchLoadPtPciDevices() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(actions.loadPtPciDevices.match);
-    yield fork(loadPtPciDevices, dbus, action.payload.vmPath);
+    yield fork(loadPtPciDevices, action.payload.vmPath);
   }
 }
 
-function* watchLoadPtRules(dbus: DBus) {
+function* watchLoadPtRules() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(actions.loadPtRules.match);
-    yield fork(loadPtRules, dbus, action.payload.vmPath);
+    yield fork(loadPtRules, action.payload.vmPath);
   }
 }
 
-function* watchLoadNetFirewallRules(dbus: DBus) {
+function* watchLoadNetFirewallRules() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(
       actions.loadNetFirewallRules.match,
     );
-    yield fork(loadNetFirewallRules, dbus, action.payload.vmPath);
+    yield fork(loadNetFirewallRules, action.payload.vmPath);
   }
 }
 
-function* watchLoadProductProperties(dbus: DBus) {
+function* watchLoadProductProperties() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(
       actions.loadProductProperties.match,
     );
-    yield fork(loadProductProperties, dbus, action.payload.vmPath);
+    yield fork(loadProductProperties, action.payload.vmPath);
   }
 }
 
-function* watchLoadVmNics(dbus: DBus) {
+function* watchLoadVmNics() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(actions.loadNics.match);
-    yield fork(loadVmNics, dbus, action.payload.vmPath);
+    yield fork(loadVmNics, action.payload.vmPath);
   }
 }
 
-function* watchLoadVmDisks(dbus: DBus) {
+function* watchLoadVmDisks() {
   while (true) {
     const action: PayloadAction<{ vmPath: string }> = yield take(actions.loadDisks.match);
-    yield fork(loadVmDisks, dbus, action.payload.vmPath);
+    yield fork(loadVmDisks, action.payload.vmPath);
   }
 }
 
@@ -180,12 +171,12 @@ const signalMatcher = (action: Action) => (
   && action.payload.signal.interface === interfaces.XENMGR
 );
 
-function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
+function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
     case xenmgrSignals.VM_CREATED: {
       const [, vmPath] = (signal.args as string[]);
-      yield fork(loadVm, dbus, vmPath);
+      yield fork(loadVm, vmPath);
       break;
     }
     case xenmgrSignals.VM_DELETED: {
@@ -202,40 +193,40 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
     }
     case xenmgrSignals.VM_TRANSFER_CHANGED: {
       const [, vmPath] = (signal.args as string[]);
-      yield fork(loadProperty, dbus, vmPath, 'download_progress');
+      yield fork(loadProperty, vmPath, 'download_progress');
       break;
     }
     case xenmgrSignals.VM_CONFIG_CHANGED: {
       const [, vmPath] = (signal.args as string[]);
-      yield fork(loadVm, dbus, vmPath);
+      yield fork(loadVm, vmPath);
       break;
     }
     case xenmgrSignals.VM_NAME_CHANGED: {
       const [, vmPath] = (signal.args as string[]);
-      yield fork(loadProperty, dbus, vmPath, 'name');
+      yield fork(loadProperty, vmPath, 'name');
       break;
     }
   }
 }
 
-function* startWatchers(dbus: DBus) {
+function* startWatchers() {
   yield all([
-    takeEvery(signalMatcher, signalHandler, dbus),
-    watchLoadProperties(dbus),
-    watchLoadArgoFirewallRules(dbus),
-    watchLoadPtPciDevices(dbus),
-    watchLoadPtRules(dbus),
-    watchLoadNetFirewallRules(dbus),
-    watchLoadProductProperties(dbus),
-    watchLoadVmNics(dbus),
-    watchLoadVmDisks(dbus),
+    takeEvery(signalMatcher, signalHandler),
+    watchLoadProperties(),
+    watchLoadArgoFirewallRules(),
+    watchLoadPtPciDevices(),
+    watchLoadPtRules(),
+    watchLoadNetFirewallRules(),
+    watchLoadProductProperties(),
+    watchLoadVmNics(),
+    watchLoadVmDisks(),
   ]);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function* initialize(dbus: DBus) {
+export default function* initialize() {
   yield all([
-    startWatchers(dbus),
-    loadVms(dbus),
+    startWatchers(),
+    loadVms(),
   ]);
 }

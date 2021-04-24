@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type UpdatemgrProperties = {
@@ -17,67 +17,67 @@ export const signals = {
 };
 
 export default {
-  getProperty: (name: string): Message => buildMessage(
+  getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.UPDATEMGR, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (): Message => buildMessage(
+  getAllProperties: (): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.UPDATEMGR,
   ),
-  setProperty: (name: string, value: string): Message => buildMessage(
+  setProperty: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Set',
     interfaces.UPDATEMGR, name.replace(/_/g, '-'), value,
   ),
-  applyUpdateAndReboot: (): Message => buildMessage(
+  applyUpdateAndReboot: (): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'apply_update_and_reboot',
   ),
-  applyUpdateAndShutdown: (): Message => buildMessage(
+  applyUpdateAndShutdown: (): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'apply_update_and_shutdown',
   ),
-  cancelUpdate: (): Message => buildMessage(
+  cancelUpdate: (): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'cancel_update',
   ),
-  checkUpdate: (url: string): Message => buildMessage(
+  checkUpdate: (url: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'check_update',
     url,
   ),
-  checkUpdateLatest: (url: string): Message => buildMessage(
+  checkUpdateLatest: (url: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'check_update_latest',
     url,
   ),
-  downloadUpdate: (url: string): Message => buildMessage(
+  downloadUpdate: (url: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,
     'download_update',
     url,
   ),
-  downloadUpdateLatest: (url: string): Message => buildMessage(
+  downloadUpdateLatest: (url: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',
     interfaces.UPDATEMGR,

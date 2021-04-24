@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type VMDiskProperties = {
@@ -19,69 +19,73 @@ export type VMDiskProperties = {
 };
 
 export default {
-  getProperty: (diskPath: string, name: string): Message => buildMessage(
+  getProperty: (diskPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     diskPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.VM_DISK, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (diskPath: string): Message => buildMessage(
+  getAllProperties: (diskPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     diskPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.VM_DISK,
   ),
-  setProperty: (diskPath: string, name: string, value: string): Message => buildMessage(
+  setProperty: (
+    diskPath: string,
+    name: string,
+    value: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     diskPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Set',
     interfaces.VM_DISK, name.replace(/_/g, '-'), value,
   ),
-  attachPhy: (phyPath: string): Message => buildMessage(
+  attachPhy: (phyPath: string): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'attach_phy',
     phyPath,
   ),
-  attachVhd: (vhdPath: string): Message => buildMessage(
+  attachVhd: (vhdPath: string): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'attach_vhd',
     vhdPath,
   ),
-  delete: (): Message => buildMessage(
+  delete: (): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'delete',
   ),
-  generateCryptoKey: (keySize: number): Message => buildMessage(
+  generateCryptoKey: (keySize: number): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'generate_crypto_key',
     keySize,
   ),
-  generateCryptoKeyIn: (keySize: number, dirPath: string): Message => buildMessage(
+  generateCryptoKeyIn: (keySize: number, dirPath: string): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'generate_crypto_key_in',
     keySize, dirPath,
   ),
-  mount: (dirPath: string, readOnly: boolean): Message => buildMessage(
+  mount: (dirPath: string, readOnly: boolean): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,
     'mount',
     dirPath, readOnly,
   ),
-  umount: (): Message => buildMessage(
+  umount: (): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',
     interfaces.USB_DAEMON,

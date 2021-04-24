@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export const signals = {
@@ -9,72 +9,76 @@ export const signals = {
 };
 
 export default {
-  addVif: (domId: number, backendDomid: number, mac: string): Message => buildMessage(
+  addVif: (domId: number, backendDomid: number, mac: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'add_vif',
     domId, backendDomid, mac,
   ),
-  createNetwork: (networkType: string, id: number, config: string): Message => buildMessage(
+  createNetwork: (
+    networkType: string,
+    id: number,
+    config: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'create_network',
     networkType, id, config,
   ),
-  getNetworkBackend: (network: string): Message => buildMessage(
+  getNetworkBackend: (network: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'get_network_backend',
     network,
   ),
-  isInitialized: (): Message => buildMessage(
+  isInitialized: (): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'is_initialized',
   ),
-  isNetworkingActive: (): Message => buildMessage(
+  isNetworkingActive: (): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'is_networking_active',
   ),
-  list: (): Message => buildMessage(
+  list: (): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'list',
   ),
-  listBackends: (): Message => buildMessage(
+  listBackends: (): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'list_backends',
   ),
-  moveToNetwork: (vif: string, network: string): Message => buildMessage(
+  moveToNetwork: (vif: string, network: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'move_to_network',
     vif, network,
   ),
-  ndvmStatus: (uuid: string, domId: number, status: number): Message => buildMessage(
+  ndvmStatus: (uuid: string, domId: number, status: number): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'ndvm_status',
     uuid, domId, status,
   ),
-  shutdown: (): Message => buildMessage(
+  shutdown: (): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,
     'shutdown',
   ),
-  vifConnected: (vif: string, domId: number): Message => buildMessage(
+  vifConnected: (vif: string, domId: number): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',
     interfaces.NETWORK_DAEMON,

@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { interfaces, services } from '../constants';
 
 export type VMNicProperties = {
@@ -13,21 +13,21 @@ export type VMNicProperties = {
 };
 
 export default {
-  getProperty: (nicPath: string, name: string): Message => buildMessage(
+  getProperty: (nicPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     nicPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.VM_NIC, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (nicPath: string): Message => buildMessage(
+  getAllProperties: (nicPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     nicPath,
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.VM_NIC,
   ),
-  setProperty: (nicPath: string, name: string, value: string): Message => buildMessage(
+  setProperty: (nicPath: string, name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     nicPath,
     interfaces.FREEDESKTOP_PROPERTIES,
@@ -35,7 +35,7 @@ export default {
     interfaces.VM_NIC,
     name.replace(/_/g, '-'), value,
   ),
-  delete: (nicPath: string): Message => buildMessage(
+  delete: (nicPath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     nicPath,
     interfaces.VM_NIC,

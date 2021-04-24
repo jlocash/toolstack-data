@@ -1,21 +1,21 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export default {
-  hello: (): Message => buildMessage(
+  hello: (): Promise<DBus.Arguments> => DBus.send(
     services.FREEDESKTOP,
     '/org/freedesktop/DBus',
     interfaces.FREEDESKTOP,
     'Hello',
   ),
-  addMatch: (iface: string): Message => buildMessage(
+  addMatch: (iface: string): Promise<DBus.Arguments> => DBus.send(
     services.FREEDESKTOP,
     '/org/freedesktop/DBus',
     interfaces.FREEDESKTOP,
     'AddMatch',
     `type='signal',interface='${iface}'`,
   ),
-  removeMatch: (iface: string): Message => buildMessage(
+  removeMatch: (iface: string): Promise<DBus.Arguments> => DBus.send(
     services.FREEDESKTOP,
     '/org/freedesktop/DBus',
     interfaces.FREEDESKTOP,

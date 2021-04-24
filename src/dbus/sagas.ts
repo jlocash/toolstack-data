@@ -4,52 +4,51 @@ import {
 import { eventChannel } from 'redux-saga';
 import { actions } from './slice';
 import freedesktop from './interfaces/freedesktop';
-import dbusConnect, { Signal } from './dbus';
-import type { DBus } from './dbus';
+import * as DBus from './dbus';
 import initializeHost from './host/sagas';
 import initializeVms from './vm/sagas';
 import initializeUpdate from './update/sagas';
 import initializeNdvms from './ndvm/sagas';
 import initializeBatteries from './battery/sagas';
 
-const createSignalChannel = (dbus: DBus) => eventChannel((emitter) => {
-  dbus.onSignal((signal) => {
+const createSignalChannel = () => eventChannel((emitter) => {
+  DBus.onSignal((signal) => {
     emitter(signal);
   });
 
-  return () => dbus.close();
+  return () => DBus.close();
 });
 
-function* watchSignals(dbus: DBus) {
-  const channel = createSignalChannel(dbus);
+function* watchSignals() {
+  const channel = createSignalChannel();
   while (true) {
-    const signal: Signal = yield take(channel);
+    const signal: DBus.Signal = yield take(channel);
     yield put(actions.signalReceived({ signal }));
   }
 }
 
-const createErrorChannel = (dbus: DBus) => eventChannel((emitter) => {
-  dbus.onError((err) => {
+const createErrorChannel = () => eventChannel((emitter) => {
+  DBus.onError((err) => {
     emitter(err);
   });
 
-  return () => dbus.close();
+  return () => DBus.close();
 });
 
-function* watchErrors(dbus: DBus) {
-  const channel = createErrorChannel(dbus);
+function* watchErrors() {
+  const channel = createErrorChannel();
   while (true) {
     const err: Event = yield take(channel);
     yield put(actions.errorReceived({ err }));
   }
 }
 
-function* registerSignals(dbus: DBus, iface: string) {
-  yield call(dbus.send, freedesktop.addMatch(iface));
+function* registerSignals(iface: string) {
+  yield call(freedesktop.addMatch, iface);
   yield put(actions.signalsRegistered({ interface: iface }));
 }
 
-function* initialize(dbus: DBus) {
+function* initialize() {
   const signalInterfaces = [
     'com.citrix.xenclient.status_tool',
     'com.citrix.xenclient.input',
@@ -63,15 +62,14 @@ function* initialize(dbus: DBus) {
     'com.citrix.xenclient.xenmgr.guestreq',
   ];
 
-  yield call(dbus.send, freedesktop.hello());
-  yield all(signalInterfaces.map((iface) => registerSignals(dbus, iface)));
-
+  yield call(freedesktop.hello);
+  yield all(signalInterfaces.map((iface) => registerSignals(iface)));
   yield all([
-    initializeHost(dbus),
-    initializeVms(dbus),
-    initializeUpdate(dbus),
-    initializeNdvms(dbus),
-    initializeBatteries(dbus),
+    initializeHost(),
+    initializeVms(),
+    initializeUpdate(),
+    initializeNdvms(),
+    initializeBatteries(),
   ]);
 }
 
@@ -80,12 +78,11 @@ export default function* dbusSaga() {
   try {
     const host = process.env.REMOTE_HOST || window.location.hostname;
     const port = process.env.REMOTE_PORT || '8080';
-    const dbus: DBus = yield call(dbusConnect, host, port);
-    yield put(actions.connectionEstablished({ url: dbus.socket.url }));
+    yield call(DBus.connect, host, port);
     yield all([
-      call(watchSignals, dbus),
-      call(watchErrors, dbus),
-      call(initialize, dbus),
+      watchSignals(),
+      watchErrors(),
+      initialize(),
     ]);
   } catch (err) {
     yield put(actions.connectionError({ err }));

@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type XenmgrConfigProperties = {
@@ -44,55 +44,61 @@ export const signals = {
 };
 
 export default {
-  getProperty: (name: string): Message => buildMessage(
+  getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.XENMGR_CONFIG, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (): Message => buildMessage(
+  getAllProperties: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.XENMGR_CONFIG,
   ),
-  setProperty: (name: string, value: string): Message => buildMessage(
+  setProperty: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Set',
     interfaces.XENMGR_CONFIG, name.replace(/_/g, '-'), value,
   ),
-  createVhd: (template: string): Message => buildMessage(
+  createVhd: (template: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'create_vhd',
     template,
   ),
-  createVm: (): Message => buildMessage(
+  createVm: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'create_vm',
   ),
-  createVmWithTemplate: (template: string): Message => buildMessage(
+  createVmWithTemplate: (template: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'create_vm_with_template',
     template,
   ),
-  createVmWithTemplateAndJson: (template: string, json: string): Message => buildMessage(
+  createVmWithTemplateAndJson: (
+    template: string,
+    json: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'create_vm_with_template_and_json',
     template, json,
   ),
-  createVmWithTemplateAndUuid: (template: string, uuid: string): Message => buildMessage(
+  createVmWithTemplateAndUuid: (
+    template: string,
+    uuid: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
@@ -100,100 +106,107 @@ export default {
     template, uuid,
   ),
   createVmWithUi: (template: string, name: string, description: string,
-    imagePath: string): Message => buildMessage(
+    imagePath: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'create_vm_with_ui',
     template, name, description, imagePath,
   ),
-  findVmByDomid: (domId: number): Message => buildMessage(
+  findVmByDomid: (domId: number): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'find_vm_by_domid',
     domId,
   ),
-  findVmByUuid: (uuid: string): Message => buildMessage(
+  findVmByUuid: (uuid: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'find_vm_by_uuid',
     uuid,
   ),
-  listChildServiceVmTemplates: (): Message => buildMessage(
+  listChildServiceVmTemplates: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_child_service_vm_templates',
   ),
-  listDomids: (): Message => buildMessage(
+  listDomids: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_domids',
   ),
-  listExtensionPacks: (): Message => buildMessage(
+  listExtensionPacks: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_extension_packs',
   ),
-  listTemplates: (): Message => buildMessage(
+  listTemplates: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_templates',
   ),
-  listUiTemplates: (): Message => buildMessage(
+  listUiTemplates: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_ui_templates',
   ),
-  listVms: (): Message => buildMessage(
+  listVms: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'list_vms',
   ),
   createStatusReport: (screenshots: boolean, guestInfo: boolean, summary: string,
-    description: string, reproSteps: string, ticket: string): Message => buildMessage(
+    description: string, reproSteps: string, ticket: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'create_status_report',
     screenshots, guestInfo, summary, description, reproSteps, ticket,
   ),
-  gather: (name: string, data: string): Message => buildMessage(
+  gather: (name: string, data: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'gather',
     name, data,
   ),
-  save: (mode: string): Message => buildMessage(
+  save: (mode: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'save',
     mode,
   ),
-  statusReportScreen: (show: boolean): Message => buildMessage(
+  statusReportScreen: (show: boolean): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'status_report_screen',
     show,
   ),
-  taasAgreeTerms: (username: string, password: string, version: string): Message => buildMessage(
+  taasAgreeTerms: (
+    username: string,
+    password: string,
+    version: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'taas_agree_terms',
     username, password, version,
   ),
-  taasAuthenticateCredentials: (username: string, password: string): Message => buildMessage(
+  taasAuthenticateCredentials: (
+    username: string,
+    password: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
@@ -201,46 +214,46 @@ export default {
     username, password,
   ),
   taasUpload: (username: string, password: string, caseId: string,
-    filename: string): Message => buildMessage(
+    filename: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.DIAG,
     'taas_upload',
     username, password, caseId, filename,
   ),
-  requestAttention: (): Message => buildMessage(
+  requestAttention: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.GUESTREQ,
     'request_attention',
   ),
-  scriptDequeue: (): Message => buildMessage(
+  scriptDequeue: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'script_dequeue',
   ),
-  scriptQueue: (): Message => buildMessage(
+  scriptQueue: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR,
     'script_queue',
   ),
-  unrestrictedCreateVm: (): Message => buildMessage(
+  unrestrictedCreateVm: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR_UNRESTRICTED,
     'unrestricted_create_vm',
   ),
   unrestrictedCreateVmWithTemplateAndJson: (template: string,
-    json: string): Message => buildMessage(
+    json: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR_UNRESTRICTED,
     'unrestricted_create_vm_with_template_and_json',
     template, json,
   ),
-  unrestrictedDeleteVm: (uuid: string): Message => buildMessage(
+  unrestrictedDeleteVm: (uuid: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',
     interfaces.XENMGR_UNRESTRICTED,

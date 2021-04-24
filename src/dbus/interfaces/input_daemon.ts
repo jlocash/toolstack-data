@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export const signals = {
@@ -13,52 +13,52 @@ export const signals = {
 };
 
 export default {
-  attachVkbd: (domId: number): Message => buildMessage(
+  attachVkbd: (domId: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'attach_vkbd',
     domId,
   ),
-  authBegin: (): Message => buildMessage(
+  authBegin: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_begin',
   ),
-  authClearStatus: (): Message => buildMessage(
+  authClearStatus: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_clear_status',
   ),
-  authCollectPassword: (): Message => buildMessage(
+  authCollectPassword: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_collect_password',
   ),
-  authCreateHash: (fname: string, password: string): Message => buildMessage(
+  authCreateHash: (fname: string, password: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_create_hash',
     fname, password,
   ),
-  authGetContext: (): Message => buildMessage(
+  authGetContext: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_get_context',
   ),
-  authGetStatus: (clear: boolean): Message => buildMessage(
+  authGetStatus: (clear: boolean): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_get_status',
     clear,
   ),
-  authRemoteLogin: (username: string, password: string): Message => buildMessage(
+  authRemoteLogin: (username: string, password: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
@@ -66,47 +66,51 @@ export default {
     username, password,
   ),
   authRemoteStatus: (autoStarted: boolean, status: number, id: string, username: string,
-    recoveryKeyFile: string, ctxFlags: number): Message => buildMessage(
+    recoveryKeyFile: string, ctxFlags: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_remote_status',
     autoStarted, status, id, username, recoveryKeyFile, ctxFlags,
   ),
-  authRmPlatformUser: (): Message => buildMessage(
+  authRmPlatformUser: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_rm_platform_user',
   ),
-  authSetContext: (user: string, title: string): Message => buildMessage(
+  authSetContext: (user: string, title: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_set_context',
     user, title,
   ),
-  authSetContextFlags: (user: string, title: string, flags: string): Message => buildMessage(
+  authSetContextFlags: (
+    user: string,
+    title: string,
+    flags: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_set_context_flags',
     user, title, flags,
   ),
-  authTitle: (): Message => buildMessage(
+  authTitle: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'auth_title',
   ),
-  detachVkbd: (domId: number): Message => buildMessage(
+  detachVkbd: (domId: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'detach_vkbd',
     domId,
   ),
-  divertKeyboardFocus: (uuid: string): Message => buildMessage(
+  divertKeyboardFocus: (uuid: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
@@ -114,183 +118,183 @@ export default {
     uuid,
   ),
   divertMouseFocus: (uuid: string, sX1: number, sY1: number, sX2: number, sY2: number, dX1: number,
-    dY1: number, dX2: number, dY2: number): Message => buildMessage(
+    dY1: number, dX2: number, dY2: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'divert_mouse_focus',
     uuid, sX1, sY1, sX2, sY2, dX1, dY1, dX2, dY2,
   ),
-  focusMode: (mode: number): Message => buildMessage(
+  focusMode: (mode: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'focus_mode',
     mode,
   ),
-  getAuthOnBoot: (): Message => buildMessage(
+  getAuthOnBoot: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_auth_on_boot',
   ),
-  getCurrentKbLayout: (): Message => buildMessage(
+  getCurrentKbLayout: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_current_kb_layout',
   ),
-  getFocusDomid: (): Message => buildMessage(
+  getFocusDomid: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_focus_domid',
   ),
-  getIdleTime: (): Message => buildMessage(
+  getIdleTime: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_idle_time',
   ),
-  getKbLayouts: (): Message => buildMessage(
+  getKbLayouts: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_kb_layouts',
   ),
-  getLastInputTime: (): Message => buildMessage(
+  getLastInputTime: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_last_input_time',
   ),
-  getLidState: (): Message => buildMessage(
+  getLidState: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_lid_state',
   ),
-  getMouseSpeed: (): Message => buildMessage(
+  getMouseSpeed: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_mouse_speed',
   ),
-  getPlatformUser: (): Message => buildMessage(
+  getPlatformUser: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_platform_user',
   ),
-  getRemoteUserHash: (userId: string): Message => buildMessage(
+  getRemoteUserHash: (userId: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_remote_user_hash',
     userId,
   ),
-  getUserKeydir: (): Message => buildMessage(
+  getUserKeydir: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'get_user_keydir',
   ),
-  lock: (canSwitchOut: boolean): Message => buildMessage(
+  lock: (canSwitchOut: boolean): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'lock',
     canSwitchOut,
   ),
-  lockTimeoutGet: (): Message => buildMessage(
+  lockTimeoutGet: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'lock_timeout_get',
   ),
-  lockTimeoutSet: (value: number): Message => buildMessage(
+  lockTimeoutSet: (value: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'lock_timeout_set',
     value,
   ),
-  setAuthOnBoot: (auth: boolean): Message => buildMessage(
+  setAuthOnBoot: (auth: boolean): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'set_auth_on_boot',
     auth,
   ),
-  setCurrentKbLayout: (layout: string): Message => buildMessage(
+  setCurrentKbLayout: (layout: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'set_current_kb_layout',
     layout,
   ),
-  setDivertKeyboardFilter: (...keyFilter: number[]): Message => buildMessage(
+  setDivertKeyboardFilter: (...keyFilter: number[]): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'set_divert_keyboard_filter',
     ...keyFilter,
   ),
-  setMouseSpeed: (mouseSpeed: number): Message => buildMessage(
+  setMouseSpeed: (mouseSpeed: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'set_mouse_speed',
     mouseSpeed,
   ),
-  setSlot: (domId: number, slot: number): Message => buildMessage(
+  setSlot: (domId: number, slot: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'set_slot',
     domId, slot,
   ),
-  stopKeyboardDivert: (): Message => buildMessage(
+  stopKeyboardDivert: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'stop_keyboard_divert',
   ),
-  stopMouseDivert: (): Message => buildMessage(
+  stopMouseDivert: (): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'stop_mouse_divert',
   ),
-  switchFocus: (domId: number, force: boolean): Message => buildMessage(
+  switchFocus: (domId: number, force: boolean): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'switch_focus',
     domId, force,
   ),
-  touch: (uuid: string): Message => buildMessage(
+  touch: (uuid: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'touch',
     uuid,
   ),
-  touchpadGet: (name: string): Message => buildMessage(
+  touchpadGet: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'touchpad_get',
     name,
   ),
-  touchpadSet: (name: string, value: string): Message => buildMessage(
+  touchpadSet: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,
     'touchpad_set',
     name, value,
   ),
-  updateSeamlessMouseSettings: (domUuid: string): Message => buildMessage(
+  updateSeamlessMouseSettings: (domUuid: string): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',
     interfaces.INPUT,

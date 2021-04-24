@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export type HostProperties = {
@@ -88,221 +88,233 @@ export const signals = {
 };
 
 export default {
-  getProperty: (name: string): Message => buildMessage(
+  getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Get',
     interfaces.HOST, name.replace(/_/g, '-'),
   ),
-  getAllProperties: (): Message => buildMessage(
+  getAllProperties: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.FREEDESKTOP_PROPERTIES,
     'GetAll',
     interfaces.HOST,
   ),
-  setProperty: (name: string, value: string): Message => buildMessage(
+  setProperty: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.FREEDESKTOP_PROPERTIES,
     'Set',
     interfaces.HOST, name.replace(/_/g, '-'), value,
   ),
-  assignCdDevice: (deviceId: string, sticky: boolean, vmUuid: string): Message => buildMessage(
+  assignCdDevice: (
+    deviceId: string,
+    sticky: boolean,
+    vmUuid: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'assign_cd_device',
     deviceId, sticky, vmUuid,
   ),
-  configureGpuPlacement: (id: string, slot: number): Message => buildMessage(
+  configureGpuPlacement: (id: string, slot: number): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'configure_gpu_placement',
     id, slot,
   ),
-  ejectCdDevice: (deviceId: string): Message => buildMessage(
+  ejectCdDevice: (deviceId: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'eject_cd_device',
     deviceId,
   ),
-  getCdDeviceAssignment: (deviceId: string): Message => buildMessage(
+  getCdDeviceAssignment: (deviceId: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'get_cd_device_assignment',
     deviceId,
   ),
-  getGpuPlacement: (id: string): Message => buildMessage(
+  getGpuPlacement: (id: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'get_gpu_placement',
     id,
   ),
-  getSecondsFromEpoch: (): Message => buildMessage(
+  getSecondsFromEpoch: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'get_seconds_from_epoch',
   ),
-  getSoundCardControl: (card: string, control: string): Message => buildMessage(
+  getSoundCardControl: (card: string, control: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'get_sound_card_control',
     card, control,
   ),
-  hibernate: (): Message => buildMessage(
+  hibernate: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'hibernate',
   ),
-  isServiceRunning: (service: string): Message => buildMessage(
+  isServiceRunning: (service: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'is_service_running',
     service,
   ),
-  listCaptureDevices: (): Message => buildMessage(
+  listCaptureDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_capture_devices',
   ),
-  listCdDevices: (): Message => buildMessage(
+  listCdDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_cd_devices',
   ),
-  listDiskDevices: (): Message => buildMessage(
+  listDiskDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_disk_devices',
   ),
-  listGpuDevices: (): Message => buildMessage(
+  listGpuDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_gpu_devices',
   ),
-  listIsos: (): Message => buildMessage(
+  listIsos: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_isos',
   ),
-  listPciDevices: (): Message => buildMessage(
+  listPciDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_pci_devices',
   ),
-  listPlaybackDevices: (): Message => buildMessage(
+  listPlaybackDevices: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_playback_devices',
   ),
-  listSoundCardControls: (card: string): Message => buildMessage(
+  listSoundCardControls: (card: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_sound_card_controls',
     card,
   ),
-  listSoundCards: (): Message => buildMessage(
+  listSoundCards: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_sound_cards',
   ),
-  listUiPlugins: (subdir: string): Message => buildMessage(
+  listUiPlugins: (subdir: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'list_ui_plugins',
     subdir,
   ),
-  reboot: (): Message => buildMessage(
+  reboot: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'reboot',
   ),
-  setLicense: (expiryDate: string, deviceUuid: string, hash: string): Message => buildMessage(
+  setLicense: (
+    expiryDate: string,
+    deviceUuid: string,
+    hash: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'set_license',
     expiryDate, deviceUuid, hash,
   ),
-  setSoundCardControl: (card: string, control: string, value: string): Message => buildMessage(
+  setSoundCardControl: (
+    card: string,
+    control: string,
+    value: string,
+  ): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'set_sound_card_control',
     card, control, value,
   ),
-  shutdown: (): Message => buildMessage(
+  shutdown: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'shutdown',
   ),
-  sleep: (): Message => buildMessage(
+  sleep: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.HOST,
     'sleep',
   ),
-  getEula: (): Message => buildMessage(
+  getEula: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.INSTALLER,
     'get_eula',
   ),
-  getInstallstate: (): Message => buildMessage(
+  getInstallstate: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.INSTALLER,
     'get_installstate',
   ),
-  progressInstallstate: (action: string): Message => buildMessage(
+  progressInstallstate: (action: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.INSTALLER,
     'progress_installstate',
     action,
   ),
-  getAcLidCloseAction: (): Message => buildMessage(
+  getAcLidCloseAction: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.POWERSETTINGS,
     'get_ac_lid_close_action',
   ),
-  getBatteryLidCloseAction: (): Message => buildMessage(
+  getBatteryLidCloseAction: (): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.POWERSETTINGS,
     'get_battery_lid_close_action',
   ),
-  setAcLidCloseAction: (action: string): Message => buildMessage(
+  setAcLidCloseAction: (action: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.POWERSETTINGS,
     'set_ac_lid_close_action',
     action,
   ),
-  setBatteryLidCloseAction: (action: string): Message => buildMessage(
+  setBatteryLidCloseAction: (action: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',
     interfaces.POWERSETTINGS,

@@ -1,4 +1,4 @@
-import { buildMessage, Message } from '../dbus';
+import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
 export const signals = {
@@ -15,197 +15,197 @@ export const signals = {
 
 export default {
   addRule: (name: string, conditions: string, actions: string,
-    undoActions: string): Message => buildMessage(
+    undoActions: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'add_rule',
     name, conditions, actions, undoActions,
   ),
-  addVar: (name: string, value: string): Message => buildMessage(
+  addVar: (name: string, value: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'add_var',
     name, value,
   ),
-  aggregateBatteryPercentage: (): Message => buildMessage(
+  aggregateBatteryPercentage: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'aggregate_battery_percentage',
   ),
-  aggregateBatteryState: (): Message => buildMessage(
+  aggregateBatteryState: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'aggregate_battery_state',
   ),
-  aggregateBatteryTimeToEmpty: (): Message => buildMessage(
+  aggregateBatteryTimeToEmpty: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'aggregate_battery_time_to_empty',
   ),
-  aggregateBatteryTimeToFull: (): Message => buildMessage(
+  aggregateBatteryTimeToFull: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'aggregate_battery_time_to_full',
   ),
-  batteriesPresent: (): Message => buildMessage(
+  batteriesPresent: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'batteries_present',
   ),
-  batteryIsPresent: (battery: number): Message => buildMessage(
+  batteryIsPresent: (battery: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'battery_is_present',
     battery,
   ),
-  batteryPercentage: (battery: number): Message => buildMessage(
+  batteryPercentage: (battery: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'battery_percentage',
     battery,
   ),
-  batteryState: (battery: number): Message => buildMessage(
+  batteryState: (battery: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'battery_state',
     battery,
   ),
-  batteryTimeToEmpty: (battery: number): Message => buildMessage(
+  batteryTimeToEmpty: (battery: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'battery_time_to_empty',
     battery,
   ),
-  batteryTimeToFull: (battery: number): Message => buildMessage(
+  batteryTimeToFull: (battery: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'battery_time_to_full',
     battery,
   ),
-  clearPolicy: (): Message => buildMessage(
+  clearPolicy: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'clear_policy',
   ),
-  clearRules: (): Message => buildMessage(
+  clearRules: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'clear_rules',
   ),
-  clearVars: (): Message => buildMessage(
+  clearVars: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'clear_vars',
   ),
-  getAcAdapterState: (): Message => buildMessage(
+  getAcAdapterState: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_ac_adapter_state',
   ),
-  getActions: (): Message => buildMessage(
+  getActions: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_actions',
   ),
-  getBif: (): Message => buildMessage(
+  getBif: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_bif',
   ),
-  getBst: (): Message => buildMessage(
+  getBst: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_bst',
   ),
-  getConditions: (): Message => buildMessage(
+  getConditions: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_conditions',
   ),
-  getCriticalTemperature: (): Message => buildMessage(
+  getCriticalTemperature: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_critical_temperature',
   ),
-  getCurrentBatteryLevel: (): Message => buildMessage(
+  getCurrentBatteryLevel: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_current_battery_level',
   ),
-  getCurrentTemperature: (): Message => buildMessage(
+  getCurrentTemperature: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_current_temperature',
   ),
-  getRules: (): Message => buildMessage(
+  getRules: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_rules',
   ),
-  getVars: (): Message => buildMessage(
+  getVars: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'get_vars',
   ),
-  hotkeySwitch: (): Message => buildMessage(
+  hotkeySwitch: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'hotkey_switch',
   ),
-  indicateInput: (inputValue: number): Message => buildMessage(
+  indicateInput: (inputValue: number): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'indicate_input',
     inputValue,
   ),
-  loadPolicyFromDb: (): Message => buildMessage(
+  loadPolicyFromDb: (): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'load_policy_from_db',
   ),
-  loadPolicyFromFile: (fileName: string): Message => buildMessage(
+  loadPolicyFromFile: (fileName: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'load_policy_from_file',
     fileName,
   ),
-  removeRule: (ruleName: string): Message => buildMessage(
+  removeRule: (ruleName: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,
     'remove_rule',
     ruleName,
   ),
-  removeVar: (name: string): Message => buildMessage(
+  removeVar: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,
     '/',
     interfaces.XCPMD,

@@ -17,21 +17,21 @@ import ui, { UIProperties } from '../interfaces/xenmgr_ui';
 import xenmgr, { signals as xenmgrSignals, XenmgrConfigProperties } from '../interfaces/xenmgr';
 import input from '../interfaces/input_daemon';
 import usbDaemon, { signals as usbSignals } from '../interfaces/usb_daemon';
-import { DBus, Signal } from '../dbus';
+import * as DBus from '../dbus';
 import { actions as dbusActions } from '../slice';
 import { translate } from '../utils';
 import { interfaces } from '../constants';
 import { actions } from './slice';
 
-function* loadProperties(dbus: DBus) {
+function* loadProperties() {
   const [
     [hostProperties],
     [uiProperties],
     [xenmgrProperties],
   ]: Record<string, unknown>[][] = yield all([
-    call(dbus.send, host.getAllProperties()),
-    call(dbus.send, ui.getAllProperties()),
-    call(dbus.send, xenmgr.getAllProperties()),
+    call(host.getAllProperties),
+    call(ui.getAllProperties),
+    call(xenmgr.getAllProperties),
   ]);
 
   yield put(actions.propertiesLoaded({
@@ -43,88 +43,82 @@ function* loadProperties(dbus: DBus) {
   }));
 }
 
-function* loadCaptureDevices(dbus: DBus) {
-  const [soundCaptureDevices]: AudioDevice[][] = yield call(dbus.send, host.listCaptureDevices());
+function* loadCaptureDevices() {
+  const [soundCaptureDevices]: AudioDevice[][] = yield call(host.listCaptureDevices);
   yield put(actions.soundCaptureDevicesLoaded({ soundCaptureDevices }));
 }
 
-function* loadPlaybackDevices(dbus: DBus) {
-  const [soundPlaybackDevices]: AudioDevice[][] = yield call(dbus.send, host.listPlaybackDevices());
+function* loadPlaybackDevices() {
+  const [soundPlaybackDevices]: AudioDevice[][] = yield call(host.listPlaybackDevices);
   yield put(actions.soundPlaybackDevicesLoaded({ soundPlaybackDevices }));
 }
 
-function* loadSoundCard(dbus: DBus, soundCard: SoundCard) {
-  const [controls]: SoundCardControl[][] = yield call(
-    dbus.send,
-    host.listSoundCardControls(soundCard.id),
-  );
+function* loadSoundCard(soundCard: SoundCard) {
+  const [controls]: SoundCardControl[][] = yield call(host.listSoundCardControls, soundCard.id);
   yield put(actions.soundCardLoaded({ soundCard: { ...soundCard, controls } }));
 }
 
-function* loadSoundCards(dbus: DBus) {
-  const [soundCards]: SoundCard[][] = yield call(dbus.send, host.listSoundCards());
-  yield all(soundCards.map((soundCard) => loadSoundCard(dbus, soundCard)));
+function* loadSoundCards() {
+  const [soundCards]: SoundCard[][] = yield call(host.listSoundCards);
+  yield all(soundCards.map((soundCard) => loadSoundCard(soundCard)));
 }
 
-function* loadSound(dbus: DBus) {
+function* loadSound() {
   yield all([
-    loadCaptureDevices(dbus),
-    loadPlaybackDevices(dbus),
-    loadSoundCards(dbus),
+    loadCaptureDevices(),
+    loadPlaybackDevices(),
+    loadSoundCards(),
   ]);
 }
 
-function* loadPower(dbus: DBus) {
+function* loadPower() {
   const [
     [acLidCloseAction],
     [batteryLidCloseAction],
   ]: string[][] = yield all([
-    call(dbus.send, host.getAcLidCloseAction()),
-    call(dbus.send, host.getBatteryLidCloseAction()),
+    call(host.getAcLidCloseAction),
+    call(host.getBatteryLidCloseAction),
   ]);
 
   yield put(actions.powerLoaded({ acLidCloseAction, batteryLidCloseAction }));
 }
 
-function* loadCdDevices(dbus: DBus) {
-  const [cdDevices]: unknown[][] = yield call(dbus.send, host.listCdDevices());
+function* loadCdDevices() {
+  const [cdDevices]: unknown[][] = yield call(host.listCdDevices);
   yield put(actions.cdDevicesLoaded({ cdDevices }));
 }
 
-function* loadPciDevices(dbus: DBus) {
-  const [pciDevices]: PCIDevice[][] = yield call(dbus.send, host.listPciDevices());
+function* loadPciDevices() {
+  const [pciDevices]: PCIDevice[][] = yield call(host.listPciDevices);
   yield put(actions.pciDevicesLoaded({ pciDevices }));
 }
 
-function* loadGpuDevices(dbus: DBus) {
-  const [gpuDevices]: GPUDevice[][] = yield call(dbus.send, host.listGpuDevices());
+function* loadGpuDevices() {
+  const [gpuDevices]: GPUDevice[][] = yield call(host.listGpuDevices);
   yield put(actions.gpusLoaded({ gpuDevices }));
 }
 
-function* loadIsos(dbus: DBus) {
-  const [isos]: string[][] = yield call(dbus.send, host.listIsos());
+function* loadIsos() {
+  const [isos]: string[][] = yield call(host.listIsos);
   yield put(actions.isosLoaded({ isos }));
 }
 
-function* loadInstallState(dbus: DBus) {
-  const [installState]: [Record<string, unknown>] = yield call(dbus.send, host.getInstallstate());
+function* loadInstallState() {
+  const [installState]: [Record<string, unknown>] = yield call(host.getInstallstate);
   yield put(actions.installStateLoaded({ installState: translate<InstallState>(installState) }));
 }
 
-function* loadWallpapers(dbus: DBus) {
-  const [availableWallpapers]: string[][] = yield call(
-    dbus.send,
-    host.listUiPlugins(WALLPAPER_DIR),
-  );
+function* loadWallpapers() {
+  const [availableWallpapers]: string[][] = yield call(host.listUiPlugins, WALLPAPER_DIR);
   yield put(actions.wallpapersLoaded({ availableWallpapers }));
 }
 
-function* loadEula(dbus: DBus) {
-  const [eula]: [string] = yield call(dbus.send, host.getEula());
+function* loadEula() {
+  const [eula]: [string] = yield call(host.getEula);
   yield put(actions.eulaLoaded({ eula }));
 }
 
-function* loadInput(dbus: DBus) {
+function* loadInput() {
   const [
     [tapToClick],
     [scrollingEnabled],
@@ -134,13 +128,13 @@ function* loadInput(dbus: DBus) {
     [keyboardLayout],
     [mouseSpeed],
   ]: unknown[][] = yield all([
-    call(dbus.send, input.touchpadGet('tap-to-click-enable')),
-    call(dbus.send, input.touchpadGet('scrolling-enable')),
-    call(dbus.send, input.touchpadGet('speed')),
-    // call(dbus.send, input.getAllProperties()),
-    call(dbus.send, input.getKbLayouts()),
-    call(dbus.send, input.getCurrentKbLayout()),
-    call(dbus.send, input.getMouseSpeed()),
+    call(input.touchpadGet, 'tap-to-click-enable'),
+    call(input.touchpadGet, 'scrolling-enable'),
+    call(input.touchpadGet, 'speed'),
+    // call(input.getAllProperties),
+    call(input.getKbLayouts),
+    call(input.getCurrentKbLayout),
+    call(input.getMouseSpeed),
   ]);
 
   yield put(actions.inputLoaded({
@@ -156,11 +150,13 @@ function* loadInput(dbus: DBus) {
   }));
 }
 
-function* loadUsbDevice(dbus: DBus, deviceId: number) {
-  const [name, state, assignedVm, detail]: [string, number, string, string] = yield call(
-    dbus.send,
-    usbDaemon.getDeviceInfo(deviceId, ''),
-  );
+function* loadUsbDevice(deviceId: number) {
+  const [name, state, assignedVm, detail]: [
+    string,
+    number,
+    string,
+    string,
+  ] = yield call(usbDaemon.getDeviceInfo, deviceId, '');
   yield put(actions.usbDeviceLoaded({
     device: {
       id: deviceId,
@@ -172,9 +168,9 @@ function* loadUsbDevice(dbus: DBus, deviceId: number) {
   }));
 }
 
-function* loadUsbDevices(dbus: DBus) {
-  const [deviceIds]: number[][] = yield call(dbus.send, usbDaemon.listDevices());
-  yield all(deviceIds.map((deviceId: number) => loadUsbDevice(dbus, deviceId)));
+function* loadUsbDevices() {
+  const [deviceIds]: number[][] = yield call(usbDaemon.listDevices);
+  yield all(deviceIds.map((deviceId: number) => loadUsbDevice(deviceId)));
 }
 
 const signalMatcher = (action: Action) => (
@@ -186,7 +182,7 @@ const signalMatcher = (action: Action) => (
   ].includes(action.payload.signal.interface)
 );
 
-function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
+function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
     case hostSignals.STATE_CHANGED: {
@@ -195,25 +191,25 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
       break;
     }
     case xenmgrSignals.CONFIG_CHANGED: {
-      yield fork(loadProperties, dbus);
+      yield fork(loadProperties);
       break;
     }
     case usbSignals.OPTICAL_DEVICE_DETECTED: {
-      yield fork(loadCdDevices, dbus);
+      yield fork(loadCdDevices);
       break;
     }
     case usbSignals.DEVICE_ADDED: {
       const [deviceId] = (signal.args as number[]);
-      yield fork(loadUsbDevice, dbus, deviceId);
+      yield fork(loadUsbDevice, deviceId);
       break;
     }
     case usbSignals.DEVICE_INFO_CHANGED: {
       const [deviceId] = (signal.args as number[]);
-      yield fork(loadUsbDevice, dbus, deviceId);
+      yield fork(loadUsbDevice, deviceId);
       break;
     }
     case usbSignals.DEVICES_CHANGED: {
-      yield fork(loadUsbDevices, dbus);
+      yield fork(loadUsbDevices);
       break;
     }
     case usbSignals.DEVICE_REJECTED: {
@@ -224,38 +220,38 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
   }
 }
 
-function* startWatchers(dbus: DBus) {
+function* startWatchers() {
   yield all([
-    takeEvery(signalMatcher, signalHandler, dbus),
-    takeEvery(actions.loadProperties().type, loadProperties, dbus),
-    takeEvery(actions.loadSound().type, loadSound, dbus),
-    takeEvery(actions.loadPower().type, loadPower, dbus),
-    takeEvery(actions.loadCdDevices().type, loadCdDevices, dbus),
-    takeEvery(actions.loadPciDevices().type, loadPciDevices, dbus),
-    takeEvery(actions.loadGpus().type, loadGpuDevices, dbus),
-    takeEvery(actions.loadIsos().type, loadIsos, dbus),
-    takeEvery(actions.loadInstallState().type, loadInstallState, dbus),
-    takeEvery(actions.loadWallpapers().type, loadWallpapers, dbus),
-    takeEvery(actions.loadInput().type, loadInput, dbus),
-    takeEvery(actions.loadUsbDevices().type, loadUsbDevices, dbus),
+    takeEvery(signalMatcher, signalHandler),
+    takeEvery(actions.loadProperties().type, loadProperties),
+    takeEvery(actions.loadSound().type, loadSound),
+    takeEvery(actions.loadPower().type, loadPower),
+    takeEvery(actions.loadCdDevices().type, loadCdDevices),
+    takeEvery(actions.loadPciDevices().type, loadPciDevices),
+    takeEvery(actions.loadGpus().type, loadGpuDevices),
+    takeEvery(actions.loadIsos().type, loadIsos),
+    takeEvery(actions.loadInstallState().type, loadInstallState),
+    takeEvery(actions.loadWallpapers().type, loadWallpapers),
+    takeEvery(actions.loadInput().type, loadInput),
+    takeEvery(actions.loadUsbDevices().type, loadUsbDevices),
   ]);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function* initialize(dbus: DBus) {
+export default function* initialize() {
   yield all([
-    startWatchers(dbus),
-    loadProperties(dbus),
-    loadSound(dbus),
-    loadPower(dbus),
-    loadCdDevices(dbus),
-    loadPciDevices(dbus),
-    loadGpuDevices(dbus),
-    loadIsos(dbus),
-    loadInstallState(dbus),
-    loadWallpapers(dbus),
-    loadEula(dbus),
-    loadInput(dbus),
-    loadUsbDevices(dbus),
+    startWatchers(),
+    loadProperties(),
+    loadSound(),
+    loadPower(),
+    loadCdDevices(),
+    loadPciDevices(),
+    loadGpuDevices(),
+    loadIsos(),
+    loadInstallState(),
+    loadWallpapers(),
+    loadEula(),
+    loadInput(),
+    loadUsbDevices(),
   ]);
 }

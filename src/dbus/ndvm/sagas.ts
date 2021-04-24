@@ -2,7 +2,7 @@ import {
   all, call, fork, put, take, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
-import type { DBus, Signal } from '../dbus';
+import * as DBus from '../dbus';
 import networkDaemon, { signals as networkDaemonSignals } from '../interfaces/network_daemon';
 import networkDomain, { signals as networkDomainSignals, NetworkDomainProperties } from '../interfaces/network_domain';
 import network, { NetworkProperties } from '../interfaces/network';
@@ -11,48 +11,41 @@ import { translate } from '../utils';
 import { actions as dbusActions } from '../slice';
 import { interfaces } from '../constants';
 
-function* loadNdvmNetwork(dbus: DBus, ndvmPath: string,
+function* loadNdvmNetwork(ndvmPath: string,
   networkPath: string) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    network.getAllProperties(networkPath),
-  );
-
+  const [data]: [Record<string, unknown>] = yield call(network.getAllProperties, networkPath);
   yield put(actions.networkLoaded({
     ndvmPath,
     network: {
       path: networkPath,
-      ...translate<NetworkProperties>(properties),
+      ...translate<NetworkProperties>(data),
     },
   }));
 }
 
-function* loadNdvmNetworks(dbus: DBus, ndvmPath: string) {
-  const [networkPaths]: string[][] = yield call(dbus.send, networkDomain.listNetworks(ndvmPath));
-  yield all(networkPaths.map((networkPath) => loadNdvmNetwork(dbus, ndvmPath, networkPath)));
+function* loadNdvmNetworks(ndvmPath: string) {
+  const [networkPaths]: string[][] = yield call(networkDomain.listNetworks, ndvmPath);
+  yield all(networkPaths.map((networkPath) => loadNdvmNetwork(ndvmPath, networkPath)));
 }
 
-function* loadNdvmProperties(dbus: DBus, ndvmPath: string) {
-  const [properties]: [Record<string, unknown>] = yield call(
-    dbus.send,
-    networkDomain.getAllProperties(ndvmPath),
-  );
+function* loadNdvmProperties(ndvmPath: string) {
+  const [data]: [Record<string, unknown>] = yield call(networkDomain.getAllProperties, ndvmPath);
   yield put(actions.propertiesLoaded({
     ndvmPath,
-    properties: translate<NetworkDomainProperties>(properties),
+    properties: translate<NetworkDomainProperties>(data),
   }));
 }
 
-function* loadNdvm(dbus: DBus, ndvmPath: string) {
+function* loadNdvm(ndvmPath: string) {
   yield put(actions.pathAcquired({ ndvmPath }));
-  yield loadNdvmProperties(dbus, ndvmPath);
-  yield loadNdvmNetworks(dbus, ndvmPath);
+  yield loadNdvmProperties(ndvmPath);
+  yield loadNdvmNetworks(ndvmPath);
   yield put(actions.loaded({ ndvmPath }));
 }
 
-function* loadNdvms(dbus: DBus) {
-  const [ndvmPaths]: string[][] = yield call(dbus.send, networkDaemon.listBackends());
-  yield all(ndvmPaths.map((ndvmPath) => loadNdvm(dbus, ndvmPath)));
+function* loadNdvms() {
+  const [ndvmPaths]: string[][] = yield call(networkDaemon.listBackends);
+  yield all(ndvmPaths.map((ndvmPath) => loadNdvm(ndvmPath)));
 }
 
 const signalMatcher = (action: Action) => (
@@ -63,7 +56,7 @@ const signalMatcher = (action: Action) => (
   ].includes(action.payload.signal.interface)
 );
 
-function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
+function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
     case networkDaemonSignals.NETWORK_ADDED:
@@ -71,7 +64,7 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
       break;
     case networkDaemonSignals.NETWORK_STATE_CHANGED: {
       const [, , ndvmPath] = (signal.args as string[]);
-      yield fork(loadNdvmNetworks, dbus, ndvmPath);
+      yield fork(loadNdvmNetworks, ndvmPath);
       break;
     }
     case networkDomainSignals.BACKEND_STATE_CHANGED: {
@@ -80,7 +73,7 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
 
       // 1 = started, 0 = stopped
       if (ndvmState === 1) {
-        yield fork(loadNdvm, dbus, ndvmPath);
+        yield fork(loadNdvm, ndvmPath);
       } else if (ndvmState === 0) {
         yield put(actions.remove({ ndvmPath }));
       }
@@ -89,32 +82,32 @@ function* signalHandler(dbus: DBus, action: PayloadAction<{ signal: Signal }>) {
   }
 }
 
-function* watchLoadNdvmProperties(dbus: DBus) {
+function* watchLoadNdvmProperties() {
   while (true) {
     const action: PayloadAction<{ ndvmPath: string }> = yield take(actions.loadProperties.match);
-    yield fork(loadNdvmProperties, dbus, action.payload.ndvmPath);
+    yield fork(loadNdvmProperties, action.payload.ndvmPath);
   }
 }
 
-function* watchLoadNdvmNetworks(dbus: DBus) {
+function* watchLoadNdvmNetworks() {
   while (true) {
     const action: PayloadAction<{ ndvmPath: string }> = yield take(actions.loadNetworks.match);
-    yield fork(loadNdvmNetworks, dbus, action.payload.ndvmPath);
+    yield fork(loadNdvmNetworks, action.payload.ndvmPath);
   }
 }
 
-function* startWatchers(dbus: DBus) {
+function* startWatchers() {
   yield all([
-    takeEvery(signalMatcher, signalHandler, dbus),
-    watchLoadNdvmProperties(dbus),
-    watchLoadNdvmNetworks(dbus),
+    takeEvery(signalMatcher, signalHandler),
+    watchLoadNdvmProperties(),
+    watchLoadNdvmNetworks(),
   ]);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export default function* initialize(dbus: DBus) {
+export default function* initialize() {
   yield all([
-    startWatchers(dbus),
-    loadNdvms(dbus),
+    startWatchers(),
+    loadNdvms(),
   ]);
 }

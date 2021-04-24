@@ -1,19 +1,7 @@
-const SIGNAL = 'signal';
-const RESPONSE = 'response';
-const ERROR = 'error';
+export type Arguments = unknown[];
 
-export type DBus = {
-  socket: WebSocket;
-  send: (data: Message) => Promise<Arguments>;
-  onSignal: (sh: SignalHandler) => void;
-  onError: (eh: ErrorHandler) => void;
-  close: () => void;
-};
-
-type Arguments = unknown[];
-
-export type Message = {
-  id?: number;
+type Message = {
+  id: number;
   destination: string;
   path: string;
   interface: string;
@@ -21,127 +9,122 @@ export type Message = {
   args: Arguments;
 };
 
-type MessageResolver = {
-  message: Message,
-  resolve: (args: Arguments) => void,
-  reject: (args: Arguments) => void,
+type Response = {
+  id: number;
+  type: 'response' | 'error';
+  args: Arguments;
+  'response-to': string;
 };
 
 export type Signal = {
   id: number;
   type: 'signal';
   interface: string;
-  member: string;
   path: string;
+  member: string;
   args: Arguments;
 };
 
-export type Response = {
-  id: number;
-  type: 'response';
-  'response-to': string;
-  args: Arguments;
+type Resolver = {
+  resolve: (args: Arguments) => void,
+  reject: (e: Error) => void,
 };
-
-export type Error = {
-  id: number;
-  type: 'error';
-  'response-to': string;
-  args: Arguments;
-};
-
-type ErrorHandler = (evt: Event) => void;
 
 type SignalHandler = (signal: Signal) => void;
+type ErrorHandler = (ev: Event) => void;
 
-const socketConnect = (host: string, port: string): Promise<WebSocket> => new Promise(
+let socket: WebSocket;
+let id = 1;
+let signalHandler: SignalHandler;
+let errorHandler: ErrorHandler;
+
+// holds the Promise context of each outgoing message
+const outgoing: { [id: string]: Resolver } = {};
+
+const messageHandler = (evt: MessageEvent): void => {
+  const message: Response | Signal = JSON.parse(evt.data);
+  switch (message.type) {
+    case 'signal': {
+      if (signalHandler) {
+        signalHandler(message);
+      }
+      break;
+    }
+    case 'response': {
+      const responseTo = message['response-to'];
+      outgoing[responseTo].resolve(message.args);
+      delete outgoing[responseTo];
+      break;
+    }
+    case 'error': {
+      const responseTo = message['response-to'];
+      outgoing[responseTo].reject(new Error(...message.args as string[]));
+      delete outgoing[responseTo];
+      break;
+    }
+    default: {
+      console.log(`unidentifiable message type: ${evt.data}`);
+    }
+  }
+};
+
+export const connect = (host: string, port: string): Promise<void> => new Promise(
   (resolve, reject) => {
     try {
-      const socket = new WebSocket(`ws://${host}:${port}`);
-      socket.onopen = () => resolve(socket);
+      socket = new WebSocket(`ws://${host}:${port}`);
+      socket.onopen = () => resolve();
+      socket.onmessage = messageHandler;
+      socket.onerror = (ev: Event) => {
+        if (errorHandler) {
+          errorHandler(ev);
+        }
+      };
     } catch (err) {
       reject(err);
     }
   },
 );
 
-export const buildMessage = (service: string, path: string, iface: string, method: string,
-  ...args: Arguments): Message => ({
-  destination: service,
-  interface: iface,
-  path,
-  method,
-  args,
-});
+export const ready = (): boolean => (
+  socket !== null && socket.readyState === 1
+);
 
-export default async (host: string, port: string): Promise<DBus> => {
-  let messageId = 1;
-  const outgoing: { [id: string]: MessageResolver } = {};
-  const socket = await socketConnect(host, port);
-
-  let onError: ErrorHandler;
-  let onSignal: SignalHandler;
-
-  socket.onmessage = (event) => {
-    const message: Signal | Response | Error = JSON.parse(event.data);
-    switch (message.type) {
-      case SIGNAL: {
-        if (onSignal && typeof onSignal === 'function') {
-          onSignal(message as Signal);
-        }
-        break;
-      }
-      case RESPONSE: {
-        const id = (message as Response)['response-to'];
-        outgoing[id].resolve(message.args);
-        break;
-      }
-      case ERROR: {
-        const id = (message as Error)['response-to'];
-        outgoing[id].reject(message.args);
-        break;
-      }
-    }
-  };
-
-  socket.onerror = (event) => {
-    if (onError) {
-      onError(event);
-    }
-  };
-
-  const send = (data: Message): Promise<Arguments> => new Promise((resolve, reject) => {
+export const send = (
+  service: string,
+  path: string,
+  iface: string,
+  method: string,
+  ...args: Arguments
+): Promise<Arguments> => new Promise((resolve, reject) => {
+  if (ready()) {
     const message: Message = {
-      id: messageId,
-      destination: data.destination,
-      path: data.path,
-      interface: data.interface,
-      method: data.method,
-      args: data.args,
+      id,
+      destination: service,
+      interface: iface,
+      path,
+      method,
+      args,
     };
 
     socket.send(JSON.stringify(message));
-    outgoing[messageId] = {
-      message,
-      resolve: (args: Arguments) => resolve(args),
-      reject: (args: Arguments) => reject(args),
-    };
+    outgoing[id] = { resolve, reject };
+    id += 1;
+  } else {
+    reject(new Error('connection not ready'));
+  }
+});
 
-    messageId += 1;
+export const close = (): void => {
+  socket.close();
+  Object.keys(outgoing).forEach((key) => {
+    outgoing[key].reject(new Error('connection closed'));
   });
+};
 
-  return {
-    socket,
-    send,
-    onSignal: (sh: SignalHandler) => {
-      onSignal = sh;
-    },
-    onError: (eh: ErrorHandler) => {
-      onError = eh;
-    },
-    close: () => {
-      socket.close();
-      Object.keys(outgoing).forEach((id) => outgoing[id].reject(['socket connection closed']));
-    },
-  };
+export const onSignal = (h: SignalHandler): void => {
+  signalHandler = h;
+};
+
+export const onError = (h: ErrorHandler): void => {
+  errorHandler = h;
 };
