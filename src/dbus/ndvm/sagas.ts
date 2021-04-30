@@ -1,49 +1,50 @@
+/* eslint @typescript-eslint/explicit-module-boundary-types: "off" */
+
 import {
   all, call, fork, put, take, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
-import * as DBus from '../dbus';
-import networkDaemon, { signals as networkDaemonSignals } from '../interfaces/network_daemon';
-import networkDomain, { signals as networkDomainSignals, NetworkDomainProperties } from '../interfaces/network_domain';
+import { Signal } from '../dbus';
+import networkDaemon from '../interfaces/network_daemon';
+import networkDomain, { NetworkDomainProperties } from '../interfaces/network_domain';
 import network, { NetworkProperties } from '../interfaces/network';
 import { actions } from './slice';
-import { translate } from '../utils';
+import { toUnderscore, translate } from '../utils';
 import { actions as dbusActions } from '../slice';
 import { interfaces } from '../constants';
 
-function* loadNdvmNetwork(ndvmPath: string,
-  networkPath: string) {
+export function* loadNdvmNetwork(ndvmPath: string, networkPath: string) {
   const [data]: [Record<string, unknown>] = yield call(network.getAllProperties, networkPath);
   yield put(actions.networkLoaded({
     ndvmPath,
     network: {
       path: networkPath,
-      ...translate<NetworkProperties>(data),
+      ...translate<NetworkProperties>(data, toUnderscore),
     },
   }));
 }
 
-function* loadNdvmNetworks(ndvmPath: string) {
+export function* loadNdvmNetworks(ndvmPath: string) {
   const [networkPaths]: string[][] = yield call(networkDomain.listNetworks, ndvmPath);
   yield all(networkPaths.map((networkPath) => loadNdvmNetwork(ndvmPath, networkPath)));
 }
 
-function* loadNdvmProperties(ndvmPath: string) {
+export function* loadNdvmProperties(ndvmPath: string) {
   const [data]: [Record<string, unknown>] = yield call(networkDomain.getAllProperties, ndvmPath);
   yield put(actions.propertiesLoaded({
     ndvmPath,
-    properties: translate<NetworkDomainProperties>(data),
+    properties: translate<NetworkDomainProperties>(data, toUnderscore),
   }));
 }
 
-function* loadNdvm(ndvmPath: string) {
+export function* loadNdvm(ndvmPath: string) {
   yield put(actions.pathAcquired({ ndvmPath }));
   yield loadNdvmProperties(ndvmPath);
   yield loadNdvmNetworks(ndvmPath);
   yield put(actions.loaded({ ndvmPath }));
 }
 
-function* loadNdvms() {
+export function* loadNdvms() {
   const [ndvmPaths]: string[][] = yield call(networkDaemon.listBackends);
   yield all(ndvmPaths.map((ndvmPath) => loadNdvm(ndvmPath)));
 }
@@ -56,18 +57,18 @@ const signalMatcher = (action: Action) => (
   ].includes(action.payload.signal.interface)
 );
 
-function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
+export function* signalHandler(action: PayloadAction<{ signal: Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
-    case networkDaemonSignals.NETWORK_ADDED:
-    case networkDaemonSignals.NETWORK_REMOVED:
+    case networkDaemon.signals.NETWORK_ADDED:
+    case networkDaemon.signals.NETWORK_REMOVED:
       break;
-    case networkDaemonSignals.NETWORK_STATE_CHANGED: {
+    case networkDaemon.signals.NETWORK_STATE_CHANGED: {
       const [, , ndvmPath] = (signal.args as string[]);
       yield fork(loadNdvmNetworks, ndvmPath);
       break;
     }
-    case networkDomainSignals.BACKEND_STATE_CHANGED: {
+    case networkDomain.signals.BACKEND_STATE_CHANGED: {
       const ndvmPath = signal.path;
       const [ndvmState] = (signal.args as number[]);
 
@@ -82,21 +83,21 @@ function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   }
 }
 
-function* watchLoadNdvmProperties() {
+export function* watchLoadNdvmProperties() {
   while (true) {
     const action: PayloadAction<{ ndvmPath: string }> = yield take(actions.loadProperties.match);
     yield fork(loadNdvmProperties, action.payload.ndvmPath);
   }
 }
 
-function* watchLoadNdvmNetworks() {
+export function* watchLoadNdvmNetworks() {
   while (true) {
     const action: PayloadAction<{ ndvmPath: string }> = yield take(actions.loadNetworks.match);
     yield fork(loadNdvmNetworks, action.payload.ndvmPath);
   }
 }
 
-function* startWatchers() {
+export function* startWatchers() {
   yield all([
     takeEvery(signalMatcher, signalHandler),
     watchLoadNdvmProperties(),
@@ -104,7 +105,6 @@ function* startWatchers() {
   ]);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function* initialize() {
   yield all([
     startWatchers(),

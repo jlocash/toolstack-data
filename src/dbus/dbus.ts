@@ -25,11 +25,6 @@ export type Signal = {
   args: Arguments;
 };
 
-type Resolver = {
-  resolve: (args: Arguments) => void,
-  reject: (e: Error) => void,
-};
-
 type SignalHandler = (signal: Signal) => void;
 type ErrorHandler = (ev: Event) => void;
 
@@ -39,7 +34,12 @@ let signalHandler: SignalHandler;
 let errorHandler: ErrorHandler;
 
 // holds the Promise context of each outgoing message
-const outgoing: { [id: string]: Resolver } = {};
+const outgoing: {
+  [id: string]: {
+    resolve: (args: Arguments) => void,
+    reject: (e: Error) => void,
+  }
+} = {};
 
 const messageHandler = (evt: MessageEvent): void => {
   const message: Response | Signal = JSON.parse(evt.data);
@@ -85,7 +85,7 @@ export const connect = (host: string, port: string): Promise<void> => new Promis
   },
 );
 
-export const ready = (): boolean => (
+export const connected = (): boolean => (
   socket !== null && socket.readyState === 1
 );
 
@@ -96,7 +96,7 @@ export const send = (
   method: string,
   ...args: Arguments
 ): Promise<Arguments> => new Promise((resolve, reject) => {
-  if (ready()) {
+  if (connected()) {
     const message: Message = {
       id,
       destination: service,
@@ -115,9 +115,13 @@ export const send = (
 });
 
 export const close = (): void => {
-  socket.close();
+  if (connected()) {
+    socket.close();
+  }
+
   Object.keys(outgoing).forEach((key) => {
     outgoing[key].reject(new Error('connection closed'));
+    delete outgoing[key];
   });
 };
 

@@ -11,12 +11,13 @@ export type UpdatemgrProperties = {
   update_url: string;
 };
 
-export const signals = {
+const signals = {
   UPDATE_DOWNLOAD_PROGRESS: 'update_download_progress',
   UPDATE_STATE_CHANGE: 'update_state_change',
 };
 
 export default {
+  signals,
   getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.UPDATEMGR,
     '/',

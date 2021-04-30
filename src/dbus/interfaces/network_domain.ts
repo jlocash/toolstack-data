@@ -9,11 +9,12 @@ export type NetworkDomainProperties = {
   uuid: string;
 };
 
-export const signals = {
+const signals = {
   BACKEND_STATE_CHANGED: 'backend_state_changed',
 };
 
 export default {
+  signals,
   getProperty: (networkPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     networkPath,

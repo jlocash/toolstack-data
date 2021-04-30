@@ -81,13 +81,14 @@ export type InstallState = {
 
 export const WALLPAPER_DIR = '';
 
-export const signals = {
+const signals = {
   LICENSE_CHANGED: 'license_changed',
   STATE_CHANGED: 'state_changed',
   STORAGE_SPACE_LOW: 'storage_space_low',
 };
 
 export default {
+  signals,
   getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/host',

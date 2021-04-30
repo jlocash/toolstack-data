@@ -1,7 +1,7 @@
 import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
-export const signals = {
+const signals = {
   AC_ADAPTER_STATE_CHANGED: 'ac_adapter_state_changed',
   BATTERY_INFO_CHANGED: 'battery_info_changed',
   BATTERY_LEVEL_NOTIFICATION: 'battery_level_notification',
@@ -14,6 +14,7 @@ export const signals = {
 };
 
 export default {
+  signals,
   addRule: (name: string, conditions: string, actions: string,
     undoActions: string): Promise<DBus.Arguments> => DBus.send(
     services.XCPMD,

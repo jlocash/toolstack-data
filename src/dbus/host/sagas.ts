@@ -1,10 +1,11 @@
+/* eslint @typescript-eslint/explicit-module-boundary-types: "off" */
+
 import {
   all, call, fork, put, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
 import host, {
   WALLPAPER_DIR,
-  signals as hostSignals,
   AudioDevice,
   GPUDevice,
   HostProperties,
@@ -14,56 +15,56 @@ import host, {
   SoundCardControl,
 } from '../interfaces/xenmgr_host';
 import ui, { UIProperties } from '../interfaces/xenmgr_ui';
-import xenmgr, { signals as xenmgrSignals, XenmgrConfigProperties } from '../interfaces/xenmgr';
+import xenmgr, { XenmgrConfigProperties } from '../interfaces/xenmgr';
 import input from '../interfaces/input_daemon';
-import usbDaemon, { signals as usbSignals } from '../interfaces/usb_daemon';
-import * as DBus from '../dbus';
+import usbDaemon from '../interfaces/usb_daemon';
+import { Signal } from '../dbus';
 import { actions as dbusActions } from '../slice';
-import { translate } from '../utils';
+import {
+  toUnderscore, translate, unwrap, merge,
+} from '../utils';
 import { interfaces } from '../constants';
 import { actions } from './slice';
 
-function* loadProperties() {
-  const [
-    [hostProperties],
-    [uiProperties],
-    [xenmgrProperties],
-  ]: Record<string, unknown>[][] = yield all([
-    call(host.getAllProperties),
-    call(ui.getAllProperties),
-    call(xenmgr.getAllProperties),
-  ]);
+export function* loadProperties() {
+  const [hostProperties, uiProperties, xenmgrProperties] = unwrap<Record<string, unknown>>(
+    yield all([
+      call(host.getAllProperties),
+      call(ui.getAllProperties),
+      call(xenmgr.getAllProperties),
+    ]),
+  );
 
   yield put(actions.propertiesLoaded({
-    properties: {
-      ...translate<HostProperties>(hostProperties),
-      ...translate<UIProperties>(uiProperties),
-      ...translate<XenmgrConfigProperties>(xenmgrProperties),
-    },
+    properties: merge(
+      translate<HostProperties>(hostProperties, toUnderscore),
+      translate<UIProperties>(uiProperties, toUnderscore),
+      translate<XenmgrConfigProperties>(xenmgrProperties, toUnderscore),
+    ),
   }));
 }
 
-function* loadCaptureDevices() {
+export function* loadCaptureDevices() {
   const [soundCaptureDevices]: AudioDevice[][] = yield call(host.listCaptureDevices);
   yield put(actions.soundCaptureDevicesLoaded({ soundCaptureDevices }));
 }
 
-function* loadPlaybackDevices() {
+export function* loadPlaybackDevices() {
   const [soundPlaybackDevices]: AudioDevice[][] = yield call(host.listPlaybackDevices);
   yield put(actions.soundPlaybackDevicesLoaded({ soundPlaybackDevices }));
 }
 
-function* loadSoundCard(soundCard: SoundCard) {
+export function* loadSoundCard(soundCard: SoundCard) {
   const [controls]: SoundCardControl[][] = yield call(host.listSoundCardControls, soundCard.id);
   yield put(actions.soundCardLoaded({ soundCard: { ...soundCard, controls } }));
 }
 
-function* loadSoundCards() {
+export function* loadSoundCards() {
   const [soundCards]: SoundCard[][] = yield call(host.listSoundCards);
   yield all(soundCards.map((soundCard) => loadSoundCard(soundCard)));
 }
 
-function* loadSound() {
+export function* loadSound() {
   yield all([
     loadCaptureDevices(),
     loadPlaybackDevices(),
@@ -71,71 +72,68 @@ function* loadSound() {
   ]);
 }
 
-function* loadPower() {
-  const [
-    [acLidCloseAction],
-    [batteryLidCloseAction],
-  ]: string[][] = yield all([
+export function* loadPower() {
+  const [acLidCloseAction, batteryLidCloseAction]: string[] = unwrap(yield all([
     call(host.getAcLidCloseAction),
     call(host.getBatteryLidCloseAction),
-  ]);
+  ]));
 
   yield put(actions.powerLoaded({ acLidCloseAction, batteryLidCloseAction }));
 }
 
-function* loadCdDevices() {
+export function* loadCdDevices() {
   const [cdDevices]: unknown[][] = yield call(host.listCdDevices);
   yield put(actions.cdDevicesLoaded({ cdDevices }));
 }
 
-function* loadPciDevices() {
+export function* loadPciDevices() {
   const [pciDevices]: PCIDevice[][] = yield call(host.listPciDevices);
   yield put(actions.pciDevicesLoaded({ pciDevices }));
 }
 
-function* loadGpuDevices() {
+export function* loadGpuDevices() {
   const [gpuDevices]: GPUDevice[][] = yield call(host.listGpuDevices);
   yield put(actions.gpusLoaded({ gpuDevices }));
 }
 
-function* loadIsos() {
+export function* loadIsos() {
   const [isos]: string[][] = yield call(host.listIsos);
   yield put(actions.isosLoaded({ isos }));
 }
 
-function* loadInstallState() {
+export function* loadInstallState() {
   const [installState]: [Record<string, unknown>] = yield call(host.getInstallstate);
-  yield put(actions.installStateLoaded({ installState: translate<InstallState>(installState) }));
+  yield put(actions.installStateLoaded({
+    installState: translate<InstallState>(installState, toUnderscore),
+  }));
 }
 
-function* loadWallpapers() {
+export function* loadWallpapers() {
   const [availableWallpapers]: string[][] = yield call(host.listUiPlugins, WALLPAPER_DIR);
   yield put(actions.wallpapersLoaded({ availableWallpapers }));
 }
 
-function* loadEula() {
+export function* loadEula() {
   const [eula]: [string] = yield call(host.getEula);
   yield put(actions.eulaLoaded({ eula }));
 }
 
-function* loadInput() {
+export function* loadInput() {
   const [
-    [tapToClick],
-    [scrollingEnabled],
-    [speed],
-    // [properties],
-    [keyboardLayouts],
-    [keyboardLayout],
-    [mouseSpeed],
-  ]: unknown[][] = yield all([
+    tapToClick,
+    scrollingEnabled,
+    speed,
+    keyboardLayouts,
+    keyboardLayout,
+    mouseSpeed,
+  ] = unwrap<unknown>(yield all([
     call(input.touchpadGet, 'tap-to-click-enable'),
     call(input.touchpadGet, 'scrolling-enable'),
     call(input.touchpadGet, 'speed'),
-    // call(input.getAllProperties),
     call(input.getKbLayouts),
     call(input.getCurrentKbLayout),
     call(input.getMouseSpeed),
-  ]);
+  ]));
 
   yield put(actions.inputLoaded({
     touchpad: {
@@ -146,16 +144,12 @@ function* loadInput() {
     keyboardLayout: (keyboardLayout as string),
     keyboardLayouts: (keyboardLayouts as string[]),
     mouseSpeed: (mouseSpeed as number),
-    // properties: translate(properties),
   }));
 }
 
-function* loadUsbDevice(deviceId: number) {
+export function* loadUsbDevice(deviceId: number) {
   const [name, state, assignedVm, detail]: [
-    string,
-    number,
-    string,
-    string,
+    string, number, string, string,
   ] = yield call(usbDaemon.getDeviceInfo, deviceId, '');
   yield put(actions.usbDeviceLoaded({
     device: {
@@ -168,7 +162,7 @@ function* loadUsbDevice(deviceId: number) {
   }));
 }
 
-function* loadUsbDevices() {
+export function* loadUsbDevices() {
   const [deviceIds]: number[][] = yield call(usbDaemon.listDevices);
   yield all(deviceIds.map((deviceId: number) => loadUsbDevice(deviceId)));
 }
@@ -182,37 +176,37 @@ const signalMatcher = (action: Action) => (
   ].includes(action.payload.signal.interface)
 );
 
-function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
+export function* signalHandler(action: PayloadAction<{ signal: Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
-    case hostSignals.STATE_CHANGED: {
+    case host.signals.STATE_CHANGED: {
       const [newState] = (signal.args as string[]);
       yield put(actions.stateUpdated({ newState }));
       break;
     }
-    case xenmgrSignals.CONFIG_CHANGED: {
+    case xenmgr.signals.CONFIG_CHANGED: {
       yield fork(loadProperties);
       break;
     }
-    case usbSignals.OPTICAL_DEVICE_DETECTED: {
+    case usbDaemon.signals.OPTICAL_DEVICE_DETECTED: {
       yield fork(loadCdDevices);
       break;
     }
-    case usbSignals.DEVICE_ADDED: {
+    case usbDaemon.signals.DEVICE_ADDED: {
       const [deviceId] = (signal.args as number[]);
       yield fork(loadUsbDevice, deviceId);
       break;
     }
-    case usbSignals.DEVICE_INFO_CHANGED: {
+    case usbDaemon.signals.DEVICE_INFO_CHANGED: {
       const [deviceId] = (signal.args as number[]);
       yield fork(loadUsbDevice, deviceId);
       break;
     }
-    case usbSignals.DEVICES_CHANGED: {
+    case usbDaemon.signals.DEVICES_CHANGED: {
       yield fork(loadUsbDevices);
       break;
     }
-    case usbSignals.DEVICE_REJECTED: {
+    case usbDaemon.signals.DEVICE_REJECTED: {
       const [deviceName, reason] = signal.args;
       console.log(`usb device ${deviceName} rejected: ${reason}`);
       break;
@@ -220,7 +214,7 @@ function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
   }
 }
 
-function* startWatchers() {
+export function* startWatchers() {
   yield all([
     takeEvery(signalMatcher, signalHandler),
     takeEvery(actions.loadProperties().type, loadProperties),
@@ -237,7 +231,6 @@ function* startWatchers() {
   ]);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function* initialize() {
   yield all([
     startWatchers(),

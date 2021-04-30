@@ -1,7 +1,7 @@
 import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
-export const signals = {
+const signals = {
   AUTH_REMOTE_START_LOGIN: 'auth_remote_start_login',
   AUTH_REMOTE_START_RECOVERY: 'auth_remote_start_recovery',
   AUTH_STATUS: 'auth_status',
@@ -13,6 +13,7 @@ export const signals = {
 };
 
 export default {
+  signals,
   attachVkbd: (domId: number): Promise<DBus.Arguments> => DBus.send(
     services.INPUT,
     '/',

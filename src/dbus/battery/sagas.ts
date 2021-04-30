@@ -1,27 +1,24 @@
+/* eslint @typescript-eslint/explicit-module-boundary-types: "off" */
+
 import {
   all, call, fork, put, takeEvery,
 } from 'redux-saga/effects';
 import { Action, PayloadAction } from '@reduxjs/toolkit';
-import * as DBus from '../dbus';
+import { unwrap } from '../utils';
+import { Signal } from '../dbus';
 import { interfaces } from '../constants';
-import xcpmd, { signals as xcpmdSignals } from '../interfaces/xcpmd';
+import xcpmd from '../interfaces/xcpmd';
 import { actions } from './slice';
 import { actions as dbusActions } from '../slice';
 
-function* loadBattery(batteryId: number) {
-  const [
-    [present],
-    [timeToEmpty],
-    [timeToFull],
-    [state],
-    [percentage],
-  ]: unknown[][] = yield all([
+export function* loadBattery(batteryId: number) {
+  const [present, timeToEmpty, timeToFull, state, percentage] = unwrap(yield all([
     call(xcpmd.batteryIsPresent, batteryId),
     call(xcpmd.batteryTimeToEmpty, batteryId),
     call(xcpmd.batteryTimeToFull, batteryId),
     call(xcpmd.batteryState, batteryId),
     call(xcpmd.batteryPercentage, batteryId),
-  ]);
+  ]));
 
   yield put(actions.batteryLoaded({
     battery: {
@@ -35,7 +32,7 @@ function* loadBattery(batteryId: number) {
   }));
 }
 
-function* loadBatteries() {
+export function* loadBatteries() {
   yield put(actions.clearAll());
   const [batteries]: number[][] = yield call(xcpmd.batteriesPresent);
   yield all(batteries.map((batteryId) => loadBattery(batteryId)));
@@ -46,26 +43,25 @@ const signalMatcher = (action: Action) => (
   && action.payload.signal.interface === interfaces.XCPMD
 );
 
-function* signalHandler(action: PayloadAction<{ signal: DBus.Signal }>) {
+export function* signalHandler(action: PayloadAction<{ signal: Signal }>) {
   const { signal } = action.payload;
   switch (signal.member) {
-    case xcpmdSignals.BATTERY_INFO_CHANGED:
-    case xcpmdSignals.BATTERY_STATUS_CHANGED:
-    case xcpmdSignals.AC_ADAPTER_STATE_CHANGED: {
+    case xcpmd.signals.BATTERY_INFO_CHANGED:
+    case xcpmd.signals.BATTERY_STATUS_CHANGED:
+    case xcpmd.signals.AC_ADAPTER_STATE_CHANGED: {
       yield fork(loadBatteries);
       break;
     }
   }
 }
 
-function* startWatchers() {
+export function* startWatchers() {
   yield all([
     takeEvery(signalMatcher, signalHandler),
     takeEvery(actions.loadAll().type, loadBatteries),
   ]);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function* initialize() {
   yield all([
     startWatchers(),

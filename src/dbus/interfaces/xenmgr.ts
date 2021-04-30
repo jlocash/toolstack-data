@@ -27,7 +27,7 @@ export type XenmgrConfigProperties = {
   xc_diag_timeout: number;
 };
 
-export const signals = {
+const signals = {
   CD_ASSIGNMENT_CHANGED: 'cd_assignment_changed',
   CONFIG_CHANGED: 'config_changed',
   LANGUAGE_CHANGED: 'language_changed',
@@ -44,6 +44,7 @@ export const signals = {
 };
 
 export default {
+  signals,
   getProperty: (name: string): Promise<DBus.Arguments> => DBus.send(
     services.XENMGR,
     '/',

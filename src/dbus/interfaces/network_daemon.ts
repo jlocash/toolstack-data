@@ -1,7 +1,7 @@
 import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
-export const signals = {
+const signals = {
   NETWORK_ADDED: 'network_added',
   NETWORK_REMOVED: 'network_removed',
   NETWORK_STATE_CHANGED: 'network_state_changed',
@@ -9,6 +9,7 @@ export const signals = {
 };
 
 export default {
+  signals,
   addVif: (domId: number, backendDomid: number, mac: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     '/',

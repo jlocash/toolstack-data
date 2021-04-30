@@ -1,7 +1,7 @@
 import * as DBus from '../dbus';
 import { services, interfaces } from '../constants';
 
-export const signals = {
+const signals = {
   DEVICE_ADDED: 'device_added',
   DEVICE_INFO_CHANGED: 'device_info_changed',
   DEVICE_REJECTED: 'device_rejected',
@@ -10,6 +10,7 @@ export const signals = {
 };
 
 export default {
+  signals,
   assignDevice: (): Promise<DBus.Arguments> => DBus.send(
     services.USB_DAEMON,
     '/',

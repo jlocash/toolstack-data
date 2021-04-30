@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/explicit-module-boundary-types: "off" */
+
 import {
   all, call, put, take,
 } from 'redux-saga/effects';
@@ -73,7 +75,6 @@ function* initialize() {
   ]);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function* dbusSaga() {
   try {
     const host = process.env.REMOTE_HOST || window.location.hostname;

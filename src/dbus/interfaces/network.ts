@@ -18,11 +18,12 @@ export type NetworkProperties = {
   type: string;
 };
 
-export const signals = {
+const signals = {
   STATE_CHANGED: 'state_changed',
 };
 
 export default {
+  signals,
   getProperty: (networkPath: string, name: string): Promise<DBus.Arguments> => DBus.send(
     services.NETWORK_DAEMON,
     networkPath,
